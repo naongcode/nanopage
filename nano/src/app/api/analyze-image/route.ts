@@ -43,7 +43,11 @@ export async function POST(request: NextRequest) {
       ],
     });
 
-    const text = result.candidates[0].content.parts.find((part: any) => part.text)?.text;
+    if (!result.candidates || !result.candidates[0] || !result.candidates[0].content) {
+      throw new Error('분석 결과를 받지 못했습니다.');
+    }
+
+    const text = result.candidates[0].content.parts?.find((part: any) => part.text)?.text;
 
     if (!text) {
       throw new Error('분석 결과를 받지 못했습니다.');
