@@ -5,11 +5,5 @@
       "src": "nano/package.json",
       "use": "@vercel/next"
     }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "nano/$1"
-    }
   ]
 }
