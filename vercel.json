@@ -1,15 +1,6 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "nano/package.json",
-      "use": "@vercel/next"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "nano/$1"
-    }
-  ]
+  "buildCommand": "cd nano && npm run build",
+  "installCommand": "cd nano && npm install",
+  "devCommand": "cd nano && npm run dev",
+  "framework": "nextjs"
 }
