@@ -1,6 +1,3 @@
 {
-  "buildCommand": "cd nano && npm run build",
-  "installCommand": "cd nano && npm install",
-  "devCommand": "cd nano && npm run dev",
-  "outputDirectory": "nano/.next"
+  "version": 2
 }
