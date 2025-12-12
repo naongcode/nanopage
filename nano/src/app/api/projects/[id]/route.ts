@@ -74,6 +74,7 @@ export async function PUT(
     if (body.required_scene_2 !== undefined) updateData.required_scene_2 = body.required_scene_2;
     if (body.forbidden_element !== undefined) updateData.forbidden_element = body.forbidden_element;
     if (body.product_images !== undefined) updateData.product_images = body.product_images;
+    if (body.common_block_settings !== undefined) updateData.common_block_settings = body.common_block_settings;
 
     // 수정 시간 자동 업데이트
     updateData.updated_at = new Date().toISOString();

@@ -166,7 +166,16 @@ export default function ProjectsPage() {
                     }}
                     className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors"
                   >
-                    결과 보기
+                    시나리오
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/detail-page/${project.id}`);
+                    }}
+                    className="flex-1 bg-purple-500 hover:bg-purple-600 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    상세페이지
                   </button>
                   <button
                     onClick={(e) => {

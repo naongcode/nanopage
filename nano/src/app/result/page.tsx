@@ -351,6 +351,12 @@ function ResultContent() {
             ✏️ 기본 정보 수정
           </button>
           <button
+            onClick={() => router.push(`/detail-page/${projectId}`)}
+            className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+          >
+            📄 상세페이지 편집
+          </button>
+          <button
             onClick={() => setShowDeleted(!showDeleted)}
             className={`font-semibold py-3 px-6 rounded-lg transition-colors ${
               showDeleted

@@ -17,6 +17,15 @@ export async function PATCH(
     if (body.user_edited_prompt_text !== undefined) {
       updateData.user_edited_prompt_text = body.user_edited_prompt_text;
     }
+    if (body.user_edited_description_text !== undefined) {
+      updateData.user_edited_description_text = body.user_edited_description_text;
+    }
+    if (body.text_position_x !== undefined) updateData.text_position_x = body.text_position_x;
+    if (body.text_position_y !== undefined) updateData.text_position_y = body.text_position_y;
+    if (body.text_width !== undefined) updateData.text_width = body.text_width;
+    if (body.text_height !== undefined) updateData.text_height = body.text_height;
+    if (body.block_style !== undefined) updateData.block_style = body.block_style;
+    if (body.image_crop !== undefined) updateData.image_crop = body.image_crop;
 
     // Supabase에서 시나리오 업데이트
     const { data, error } = await supabase

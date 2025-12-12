@@ -1,3 +1,26 @@
+// 공통 블록 설정 타입
+export interface CommonBlockSettings {
+  blockWidth: number;
+  blockBackgroundColor: string;
+  textFontFamily: string;
+  textFontSize: number;
+  textColor: string;
+  textFontWeight: 'normal' | 'bold' | '300' | '400' | '500' | '600' | '700' | '800' | '900';
+  textAlign: 'left' | 'center' | 'right' | 'justify';
+}
+
+// 개별 블록 스타일 (공통 설정의 일부만 override 가능)
+export interface BlockStyle extends Partial<CommonBlockSettings> {}
+
+// 이미지 자르기 정보
+export interface ImageCrop {
+  x: number;      // 퍼센트
+  y: number;      // 퍼센트
+  width: number;  // 퍼센트
+  height: number; // 퍼센트
+  zoom: number;   // 배율
+}
+
 // 프로젝트 타입 정의
 export interface Project {
   id?: string;
@@ -14,6 +37,7 @@ export interface Project {
   required_scene_2: string;
   forbidden_element: string;
   product_images?: string[]; // 제품 이미지 URL 배열
+  common_block_settings?: CommonBlockSettings; // 공통 블록 설정
   created_at?: string;
   updated_at?: string;
 }
@@ -27,8 +51,16 @@ export interface Scenario {
   role: string;
   prompt_text: string;
   user_edited_prompt_text?: string | null;
+  description_text?: string;  // AI 생성 설명글
+  user_edited_description_text?: string | null;  // 사용자 수정 설명글
   generated_image_urls?: string[];  // 생성된 모든 이미지들
   selected_image_url?: string | null;  // 현재 선택된 이미지
+  text_position_x?: number;  // 텍스트 X 좌표
+  text_position_y?: number | null;  // 텍스트 Y 좌표 (NULL이면 기본 레이아웃)
+  text_width?: number | null;  // 텍스트 너비
+  text_height?: number | null;  // 텍스트 높이
+  block_style?: BlockStyle | null;  // 개별 블록 스타일 override
+  image_crop?: ImageCrop | null;  // 이미지 자르기 정보
   deleted_at?: string | null;
   created_at?: string;
   updated_at?: string;
@@ -68,4 +100,11 @@ export interface UpdateScenarioRequest {
   image_type?: string;
   role?: string;
   user_edited_prompt_text?: string;
+  user_edited_description_text?: string;
+  text_position_x?: number;
+  text_position_y?: number | null;
+  text_width?: number | null;
+  text_height?: number | null;
+  block_style?: BlockStyle | null;  // 개별 블록 스타일
+  image_crop?: ImageCrop | null;  // 이미지 자르기
 }

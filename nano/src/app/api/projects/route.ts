@@ -156,7 +156,7 @@ ${imageAnalysisText}
 4. 셀링 포인트 3가지가 명확히 드러나도록 구성하세요.
 5. 각 프롬프트는 2-4문장으로 작성하세요.
 
-다음 15개 시나리오에 대해 구체적인 촬영 프롬프트를 작성해주세요:
+다음 15개 시나리오에 대해 구체적인 촬영 프롬프트와 상세페이지 설명글을 작성해주세요:
 
 ${SCENARIO_STRUCTURE.map((s, i) => `
 ${i + 1}. [${s.type}] ${s.role}
@@ -167,10 +167,13 @@ ${i + 1}. [${s.type}] ${s.role}
   "scenario_no": 번호,
   "image_type": "이미지 유형",
   "role": "역할 설명",
-  "prompt_text": "구체적인 촬영 시나리오를 다음 형식으로 작성:\n톤: (색상/분위기)\n조명: (조명 방향과 종류)\n배경: (배경 설명)\n구도: (카메라 각도와 구도)\n모델: (모델이 필요한 경우 성별/연령/특징)\n소품: (필요한 소품들)\n감성: (전달하고자 하는 감성)"
+  "prompt_text": "구체적인 촬영 시나리오를 다음 형식으로 작성:\n톤: (색상/분위기)\n조명: (조명 방향과 종류)\n배경: (배경 설명)\n구도: (카메라 각도와 구도)\n모델: (모델이 필요한 경우 성별/연령/특징)\n소품: (필요한 소품들)\n감성: (전달하고자 하는 감성)",
+  "description_text": "이 이미지 하단에 표시될 설명글 (2-3문장, 각 문장마다 줄바꿈(\\n) 포함, 타겟 고객에게 어필하는 마케팅 카피, 해당 이미지의 핵심 메시지 전달)"
 }
 
-중요: prompt_text는 반드시 위의 형식(톤:/조명:/배경:/구도: 등)을 따라 작성하세요. 각 항목은 줄바꿈으로 구분하세요.
+중요:
+1. prompt_text는 반드시 위의 형식(톤:/조명:/배경:/구도: 등)을 따라 작성하세요. 각 항목은 줄바꿈으로 구분하세요.
+2. description_text는 쿠팡 상세페이지처럼 이미지 아래 들어갈 설명글입니다. 고객의 구매 욕구를 자극하는 카피로 작성하세요.
 `;
 
     const completion = await openai.chat.completions.create({
@@ -243,6 +246,7 @@ ${i + 1}. [${s.type}] ${s.role}
       image_type: scenario.image_type,
       role: scenario.role,
       prompt_text: scenario.prompt_text,
+      description_text: scenario.description_text,
     }));
 
     const { data: savedScenarios, error: scenariosError } = await supabase
