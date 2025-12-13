@@ -17,7 +17,6 @@ export function BlockStyleOverridePanel({
   commonSettings,
   onStyleChange,
 }: BlockStyleOverridePanelProps) {
-  const [isOpen, setIsOpen] = useState(true);
   const [localStyle, setLocalStyle] = useState<BlockStyle>(blockStyle || {});
   const [isSaving, setIsSaving] = useState(false);
 
@@ -74,25 +73,20 @@ export function BlockStyleOverridePanel({
   const hasOverrides = Object.keys(localStyle).length > 0;
 
   return (
-    <div className="border-t mt-4 pt-4">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="text-sm text-blue-600 hover:underline flex items-center gap-2"
-      >
-        {isOpen ? '개별 설정 닫기' : '개별 설정 열기'}
-        {hasOverrides && (
-          <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded">
-            적용 중
-          </span>
-        )}
-      </button>
+    <div className="bg-white rounded-lg shadow-lg p-4 sticky top-4">
+      <div className="mb-4">
+        <h3 className="text-base font-bold text-gray-900">✏️ 개별 설정</h3>
+        <p className="text-xs text-gray-500">
+          이 블록만의 스타일을 설정합니다
+          {hasOverrides && (
+            <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded">
+              적용 중
+            </span>
+          )}
+        </p>
+      </div>
 
-      {isOpen && (
-        <div className="mt-4 space-y-3 p-4 bg-gray-50 rounded-lg">
-          <p className="text-xs text-gray-600">
-            이 블록만의 스타일을 설정합니다. 설정하지 않은 항목은 공통 설정을 따릅니다.
-          </p>
-
+      <div className="space-y-3 p-4 bg-gray-50 rounded-lg">
           {/* 블록 너비 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -408,7 +402,6 @@ export function BlockStyleOverridePanel({
             </button>
           </div>
         </div>
-      )}
     </div>
   );
 }

@@ -20,6 +20,7 @@ export async function PATCH(
     if (body.user_edited_description_text !== undefined) {
       updateData.user_edited_description_text = body.user_edited_description_text;
     }
+    if (body.layout_preset !== undefined) updateData.layout_preset = body.layout_preset;
     if (body.text_position_x !== undefined) updateData.text_position_x = body.text_position_x;
     if (body.text_position_y !== undefined) updateData.text_position_y = body.text_position_y;
     if (body.text_width !== undefined) updateData.text_width = body.text_width;

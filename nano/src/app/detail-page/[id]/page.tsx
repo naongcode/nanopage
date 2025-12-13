@@ -2,11 +2,14 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Scenario, Project, CommonBlockSettings, ImageCrop } from '@/types';
+import { Scenario, Project, CommonBlockSettings, ImageCrop, LayoutPreset } from '@/types';
 import { DEFAULT_COMMON_SETTINGS } from '@/lib/block-settings-defaults';
 import { CommonSettingsPanel } from '@/components/CommonSettingsPanel';
 import { BlockStyleOverridePanel } from '@/components/BlockStyleOverridePanel';
 import { ImageWithCrop } from '@/components/ImageWithCrop';
+import { LayoutPresetSelector } from '@/components/LayoutPresetSelector';
+import { LayoutBlock } from '@/components/LayoutBlock';
+import { applyLayoutPreset, getLayoutPresetConfig } from '@/lib/layout-presets';
 import {
   DndContext,
   closestCenter,
@@ -210,54 +213,64 @@ export default function DetailPage() {
   const downloadAsImage = async (format: 'png' | 'jpg') => {
     try {
       // html-to-image 동적 import
-      const { toPng, toJpeg } = await import('html-to-image');
+      const { toPng, toJpeg, toCanvas } = await import('html-to-image');
 
-      // 모든 download-content 요소를 찾아서 하나의 컨테이너로 합치기
+      // 모든 download-content 요소를 찾기
       const contentElements = document.querySelectorAll('.download-content');
       if (contentElements.length === 0) {
         alert('다운로드할 콘텐츠가 없습니다.');
         return;
       }
 
-      // 임시 컨테이너 생성
-      const tempContainer = document.createElement('div');
-      tempContainer.style.position = 'absolute';
-      tempContainer.style.left = '-9999px';
-      tempContainer.style.backgroundColor = '#ffffff';
-      document.body.appendChild(tempContainer);
+      const options = {
+        backgroundColor: '#ffffff',
+        pixelRatio: 2,
+        skipFonts: true,
+        filter: (node: any) => {
+          // no-download 클래스를 가진 요소 제외
+          if (node.classList && node.classList.contains('no-download')) {
+            return false;
+          }
+          return true;
+        },
+      };
 
-      // 모든 콘텐츠를 복사해서 임시 컨테이너에 추가
-      contentElements.forEach((element) => {
-        const clone = element.cloneNode(true) as HTMLElement;
-        tempContainer.appendChild(clone);
+      // 각 요소를 캔버스로 변환
+      const canvases = await Promise.all(
+        Array.from(contentElements).map((element) =>
+          toCanvas(element as HTMLElement, options)
+        )
+      );
+
+      // 모든 캔버스를 하나로 합치기
+      const totalHeight = canvases.reduce((sum, canvas) => sum + canvas.height, 0);
+      const maxWidth = Math.max(...canvases.map((canvas) => canvas.width));
+
+      const mergedCanvas = document.createElement('canvas');
+      mergedCanvas.width = maxWidth;
+      mergedCanvas.height = totalHeight;
+      const ctx = mergedCanvas.getContext('2d');
+
+      if (!ctx) {
+        throw new Error('Canvas context를 생성할 수 없습니다.');
+      }
+
+      // 배경을 흰색으로 채우기
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, maxWidth, totalHeight);
+
+      // 각 캔버스를 세로로 배치
+      let currentY = 0;
+      canvases.forEach((canvas) => {
+        ctx.drawImage(canvas, 0, currentY);
+        currentY += canvas.height;
       });
 
-      const dataUrl = format === 'png'
-        ? await toPng(tempContainer, {
-            backgroundColor: '#ffffff',
-            pixelRatio: 2,
-            filter: (node) => {
-              // no-download 클래스를 가진 요소 제외
-              if (node.classList && node.classList.contains('no-download')) {
-                return false;
-              }
-              return true;
-            },
-          })
-        : await toJpeg(tempContainer, {
-            backgroundColor: '#ffffff',
-            pixelRatio: 2,
-            quality: 0.95,
-            filter: (node) => {
-              if (node.classList && node.classList.contains('no-download')) {
-                return false;
-              }
-              return true;
-            },
-          });
-
-      // 임시 컨테이너 제거
-      document.body.removeChild(tempContainer);
+      // 캔버스를 이미지로 변환
+      const dataUrl = mergedCanvas.toDataURL(
+        format === 'png' ? 'image/png' : 'image/jpeg',
+        0.95
+      );
 
       // 다운로드
       const link = document.createElement('a');
@@ -354,7 +367,7 @@ export default function DetailPage() {
     }
   };
 
-  const handleCropSave = async (scenarioId: string, crop: ImageCrop) => {
+  const handleCropSave = async (scenarioId: string, crop: ImageCrop | null) => {
     try {
       const response = await fetch(`/api/scenarios/${scenarioId}`, {
         method: 'PATCH',
@@ -368,9 +381,47 @@ export default function DetailPage() {
       setScenarios((prev) =>
         prev.map((s) => (s.id === scenarioId ? { ...s, image_crop: crop } : s))
       );
+
+      if (crop === null) {
+        alert('이미지 자르기가 초기화되었습니다.');
+      }
     } catch (error) {
       console.error('Error saving image crop:', error);
       alert('이미지 자르기 저장에 실패했습니다.');
+    }
+  };
+
+  const handlePresetChange = async (scenarioId: string, presetId: LayoutPreset) => {
+    try {
+      // 프리셋에 따른 설정값 가져오기
+      const presetSettings = applyLayoutPreset(presetId);
+
+      const response = await fetch(`/api/scenarios/${scenarioId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(presetSettings),
+      });
+
+      if (!response.ok) throw new Error('프리셋 적용 실패');
+
+      // 로컬 상태 업데이트
+      setScenarios((prev) =>
+        prev.map((s) =>
+          s.id === scenarioId
+            ? {
+                ...s,
+                layout_preset: presetSettings.layout_preset,
+                text_position_x: presetSettings.text_position_x,
+                text_position_y: presetSettings.text_position_y,
+                text_width: presetSettings.text_width,
+                text_height: presetSettings.text_height,
+              }
+            : s
+        )
+      );
+    } catch (error) {
+      console.error('Error applying preset:', error);
+      alert('프리셋 적용에 실패했습니다.');
     }
   };
 
@@ -488,14 +539,20 @@ export default function DetailPage() {
             </div>
 
             {/* 가운데: 간단한 아이콘 컨트롤 */}
-            <div className="w-16 flex-shrink-0 space-y-8">
+            <div className="w-20 flex-shrink-0 space-y-8">
               {scenarios.map((scenario, index) => {
                 const isEditingCrop = editingCropId === scenario.id;
                 const isEditingStyle = editingStyleId === scenario.id;
+                const presetConfig = getLayoutPresetConfig(scenario.layout_preset);
 
                 return (
                   <div key={`control-${scenario.id}`} className="bg-white rounded-lg shadow-md p-2 flex flex-col gap-2 sticky top-4">
                     <div className="text-xs font-bold text-gray-500 text-center">{index + 1}</div>
+
+                    {/* 레이아웃 프리셋 아이콘 */}
+                    <div className="text-2xl text-center" title={presetConfig.name}>
+                      {presetConfig.icon}
+                    </div>
 
                     {/* 이미지 자르기 버튼 */}
                     <button
@@ -537,187 +594,67 @@ export default function DetailPage() {
                   const isEditingStyle = editingStyleId === scenario.id;
 
                   return (
-                    <div key={scenario.id} className="flex gap-4 items-start">
-                      {/* 블록 콘텐츠 (다운로드될 영역) */}
-                      <div
-                        className={`flex-1 download-content ${
-                          selectedTemplate === 'coupang'
-                            ? 'shadow-lg'
-                            : selectedTemplate === 'naver'
-                            ? 'border-2 border-gray-200'
-                            : 'shadow-sm'
-                        }`}
-                      >
+                    <div key={scenario.id} className="space-y-4">
+                      {/* 프리셋 선택기 (다운로드 제외) */}
+                      <div className="no-download">
+                        <LayoutPresetSelector
+                          scenarioId={scenario.id!}
+                          currentPreset={scenario.layout_preset}
+                          onPresetChange={(presetId) => handlePresetChange(scenario.id!, presetId)}
+                        />
+                      </div>
+
+                      <div className="flex gap-4 items-start">
+                        {/* 편집 패널 (해당 블록 왼쪽에 표시) */}
+                        {isEditingStyle && (
+                          <div className="w-80 flex-shrink-0 no-download">
+                            <BlockStyleOverridePanel
+                              scenarioId={scenario.id!}
+                              blockStyle={scenario.block_style || null}
+                              commonSettings={commonSettings}
+                              onStyleChange={(newStyle) => {
+                                setScenarios((prev) =>
+                                  prev.map((s) => (s.id === scenario.id ? { ...s, block_style: newStyle } : s))
+                                );
+                              }}
+                            />
+                          </div>
+                        )}
+
+                        {/* 블록 콘텐츠 (다운로드될 영역) */}
+                        <div
+                          className={`flex-1 download-content ${
+                            selectedTemplate === 'coupang'
+                              ? 'shadow-lg'
+                              : selectedTemplate === 'naver'
+                              ? 'border-2 border-gray-200'
+                              : 'shadow-sm'
+                          }`}
+                        >
                         <div
                           className="relative mx-auto bg-white"
                           style={{
-                            minHeight: hasCustomPosition ? '600px' : 'auto',
                             width: effectiveStyle.blockWidth,
                             backgroundColor: effectiveStyle.blockBackgroundColor,
                             padding: '20px',
                           }}
                         >
-                      {/* 이미지 + Crop 기능 */}
-                      <div className="w-full flex justify-center mb-4">
-                        <div className="w-full">
-                          {isEditingCrop ? (
-                            <ImageWithCrop
-                              imageUrl={scenario.selected_image_url || ''}
-                              crop={scenario.image_crop || null}
-                              isEditing={true}
-                              onCropChange={(crop) => handleCropSave(scenario.id!, crop)}
-                              onEditComplete={() => setEditingCropId(null)}
-                            />
-                          ) : (
-                            <ImageWithCrop
-                              imageUrl={scenario.selected_image_url || ''}
-                              crop={scenario.image_crop || null}
-                              isEditing={false}
-                              onCropChange={() => {}}
-                              onEditComplete={() => {}}
-                            />
-                          )}
-                        </div>
-                      </div>
-
-                      {/* 설명글 - 드래그 가능 */}
-                      {hasCustomPosition ? (
-                        <Rnd
-                          position={{
-                            x: scenario.text_position_x || 0,
-                            y: scenario.text_position_y || 0,
-                          }}
-                          size={{
-                            width: scenario.text_width || 400,
-                            height: scenario.text_height || 'auto',
-                          }}
-                          onDragStop={(e, d) => {
-                            if (scenario.id) {
-                              handleTextPositionChange(
-                                scenario.id,
-                                d.x,
-                                d.y,
-                                scenario.text_width || 400,
-                                scenario.text_height || 100
-                              );
+                          <LayoutBlock
+                            scenario={scenario}
+                            effectiveStyle={effectiveStyle}
+                            isEditingCrop={isEditingCrop}
+                            editingScenarioId={editingScenarioId}
+                            onCropSave={(crop) => handleCropSave(scenario.id!, crop)}
+                            onCropEditComplete={() => setEditingCropId(null)}
+                            onDescriptionEdit={(text) => handleDescriptionEdit(scenario.id!, text)}
+                            onEditingChange={setEditingScenarioId}
+                            onTextPositionChange={(x, y, width, height) =>
+                              handleTextPositionChange(scenario.id!, x, y, width, height)
                             }
-                          }}
-                          onResizeStop={(e, direction, ref, delta, position) => {
-                            if (scenario.id) {
-                              handleTextPositionChange(
-                                scenario.id,
-                                position.x,
-                                position.y,
-                                parseInt(ref.style.width),
-                                parseInt(ref.style.height)
-                              );
-                            }
-                          }}
-                          bounds="parent"
-                          className="border-2 border-dashed border-blue-400"
-                        >
-                          <div
-                            className="h-full p-4 bg-white/90 backdrop-blur-sm"
-                            style={{
-                              fontFamily: effectiveStyle.textFontFamily,
-                              fontSize: `${effectiveStyle.textFontSize}px`,
-                              color: effectiveStyle.textColor,
-                              fontWeight: effectiveStyle.textFontWeight,
-                              textAlign: effectiveStyle.textAlign,
-                            }}
-                          >
-                            {editingScenarioId === scenario.id ? (
-                              <textarea
-                                defaultValue={getDisplayDescription(scenario)}
-                                className="w-full h-full p-2 border rounded resize-none"
-                                style={{
-                                  fontFamily: effectiveStyle.textFontFamily,
-                                  fontSize: `${effectiveStyle.textFontSize}px`,
-                                  color: effectiveStyle.textColor,
-                                  fontWeight: effectiveStyle.textFontWeight,
-                                }}
-                                onBlur={(e) => {
-                                  if (scenario.id) {
-                                    handleDescriptionEdit(scenario.id, e.target.value);
-                                  }
-                                }}
-                                autoFocus
-                              />
-                            ) : (
-                              <p
-                                onClick={() => setEditingScenarioId(scenario.id || null)}
-                                className="cursor-pointer whitespace-pre-line"
-                              >
-                                {getDisplayDescription(scenario) || '설명글을 입력하려면 클릭하세요'}
-                              </p>
-                            )}
-                          </div>
-                        </Rnd>
-                      ) : (
-                        <div className="p-4">
-                          {editingScenarioId === scenario.id ? (
-                            <div className="space-y-2">
-                              <textarea
-                                defaultValue={getDisplayDescription(scenario)}
-                                className="w-full p-3 border rounded-lg resize-none"
-                                rows={3}
-                                style={{
-                                  fontFamily: effectiveStyle.textFontFamily,
-                                  fontSize: `${effectiveStyle.textFontSize}px`,
-                                  color: effectiveStyle.textColor,
-                                  fontWeight: effectiveStyle.textFontWeight,
-                                }}
-                                onBlur={(e) => {
-                                  if (scenario.id) {
-                                    handleDescriptionEdit(scenario.id, e.target.value);
-                                  }
-                                }}
-                                autoFocus
-                              />
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => setEditingScenarioId(null)}
-                                  className="text-sm text-gray-600 hover:text-gray-800"
-                                >
-                                  취소
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <p
-                              onClick={() => setEditingScenarioId(scenario.id || null)}
-                              className="cursor-pointer hover:bg-gray-100 p-2 rounded transition whitespace-pre-line"
-                              style={{
-                                fontFamily: effectiveStyle.textFontFamily,
-                                fontSize: `${effectiveStyle.textFontSize}px`,
-                                color: effectiveStyle.textColor,
-                                fontWeight: effectiveStyle.textFontWeight,
-                                textAlign: effectiveStyle.textAlign,
-                              }}
-                            >
-                              {getDisplayDescription(scenario) || '설명글을 입력하려면 클릭하세요'}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                        </div>
-                      </div>
-
-                      {/* 편집 패널 (해당 블록 옆에 표시) */}
-                      {isEditingStyle && (
-                        <div className="w-80 flex-shrink-0 no-download">
-                          <BlockStyleOverridePanel
-                            scenarioId={scenario.id!}
-                            blockStyle={scenario.block_style || null}
-                            commonSettings={commonSettings}
-                            onStyleChange={(newStyle) => {
-                              setScenarios((prev) =>
-                                prev.map((s) => (s.id === scenario.id ? { ...s, block_style: newStyle } : s))
-                              );
-                            }}
                           />
                         </div>
-                      )}
+                      </div>
+                      </div>
                     </div>
                   );
                 })}

@@ -19,6 +19,11 @@ export interface ImageCrop {
   width: number;  // 퍼센트
   height: number; // 퍼센트
   zoom: number;   // 배율
+  // 픽셀 기반 (정확한 표시용)
+  pixelX?: number;
+  pixelY?: number;
+  pixelWidth?: number;
+  pixelHeight?: number;
 }
 
 // 프로젝트 타입 정의
@@ -42,6 +47,19 @@ export interface Project {
   updated_at?: string;
 }
 
+// 레이아웃 프리셋 타입
+export type LayoutPreset =
+  | 'vertical'              // 이미지 위 + 텍스트 아래 (기본)
+  | 'horizontal-left'       // 이미지 좌측 + 텍스트 우측
+  | 'horizontal-right'      // 텍스트 좌측 + 이미지 우측
+  | 'overlay-center'        // 이미지 전체 배경 + 텍스트 중앙
+  | 'overlay-bottom'        // 이미지 전체 배경 + 텍스트 하단
+  | 'overlay-top'           // 이미지 전체 배경 + 텍스트 상단
+  | 'text-first'            // 텍스트 위 + 이미지 아래
+  | 'image-dominant'        // 이미지 80% + 하단 작은 캡션
+  | 'magazine'              // 이미지 60% 좌측 + 텍스트 40% 우측
+  | 'card';                 // 이미지 상단 (정사각형) + 텍스트 하단 (카드)
+
 // 시나리오 타입 정의
 export interface Scenario {
   id?: string;
@@ -55,6 +73,7 @@ export interface Scenario {
   user_edited_description_text?: string | null;  // 사용자 수정 설명글
   generated_image_urls?: string[];  // 생성된 모든 이미지들
   selected_image_url?: string | null;  // 현재 선택된 이미지
+  layout_preset?: LayoutPreset | null;  // 레이아웃 프리셋
   text_position_x?: number;  // 텍스트 X 좌표
   text_position_y?: number | null;  // 텍스트 Y 좌표 (NULL이면 기본 레이아웃)
   text_width?: number | null;  // 텍스트 너비
@@ -101,6 +120,7 @@ export interface UpdateScenarioRequest {
   role?: string;
   user_edited_prompt_text?: string;
   user_edited_description_text?: string;
+  layout_preset?: LayoutPreset | null;  // 레이아웃 프리셋
   text_position_x?: number;
   text_position_y?: number | null;
   text_width?: number | null;
