@@ -1,6 +1,7 @@
 // 공통 블록 설정 타입
 export interface CommonBlockSettings {
   blockWidth: number;
+  blockHeight?: number;
   blockBackgroundColor: string;
   textFontFamily: string;
   textFontSize: number;

@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "나노바나나 - 이커머스 상세페이지 시나리오 생성기",
   description: "AI로 15장의 이커머스 상세페이지 촬영 시나리오를 자동 생성합니다",
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({

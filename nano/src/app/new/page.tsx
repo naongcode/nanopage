@@ -11,6 +11,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [productImages, setProductImages] = useState<File[]>([]);
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
+  const [isPresetPanelOpen, setIsPresetPanelOpen] = useState(false);
   const [formData, setFormData] = useState({
     project_name: '',
     category: '',
@@ -99,7 +100,98 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-yellow-100 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-yellow-100 py-12 px-4 relative">
+      {/* 좌측 프리셋 버튼 */}
+      <button
+        onClick={() => setIsPresetPanelOpen(!isPresetPanelOpen)}
+        className="fixed left-4 top-1/2 -translate-y-1/2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-4 rounded-r-lg shadow-lg transition-all z-40 flex items-center gap-2"
+      >
+        <span className="text-xl">📋</span>
+        <span className="text-sm">프리셋</span>
+      </button>
+
+      {/* 프리셋 사이드 패널 */}
+      <div
+        className={`fixed left-0 top-0 h-full w-80 bg-white shadow-2xl z-50 transition-transform duration-300 overflow-y-auto ${
+          isPresetPanelOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">📋 프리셋</h2>
+            <button
+              onClick={() => setIsPresetPanelOpen(false)}
+              className="text-gray-500 hover:text-gray-700 text-2xl"
+            >
+              ×
+            </button>
+          </div>
+
+          {/* 차별화 컨셉 프리셋 */}
+          <div className="mb-8">
+            <h3 className="text-lg font-bold text-gray-800 mb-3 pb-2 border-b border-yellow-400">
+              차별화 컨셉 (피하고 싶은 이미지)
+            </h3>
+            <FieldOptions
+              options={FIELD_OPTIONS.differentiation_concept}
+              onSelect={(value) => setFormData(prev => ({ ...prev, differentiation_concept: value }))}
+              currentValue={formData.differentiation_concept}
+            />
+          </div>
+
+          {/* 타겟 고객 프리셋 */}
+          <div className="mb-8">
+            <h3 className="text-lg font-bold text-gray-800 mb-3 pb-2 border-b border-yellow-400">
+              타겟 고객
+            </h3>
+            {/* 성별 선택 */}
+            <div className="mb-4">
+              <p className="text-xs font-semibold text-gray-500 uppercase mb-2">성별</p>
+              <div className="flex flex-wrap gap-2">
+                {['남성', '여성', '혼성'].map((gender) => (
+                  <button
+                    key={gender}
+                    type="button"
+                    onClick={() => {
+                      const currentText = formData.target_customer;
+                      const genderText = `${gender} 타겟`;
+                      const hasGender = currentText.includes('남성') || currentText.includes('여성') || currentText.includes('혼성');
+                      if (hasGender) {
+                        const newText = currentText.replace(/남성 타겟|여성 타겟|혼성 타겟/g, genderText);
+                        setFormData(prev => ({ ...prev, target_customer: newText }));
+                      } else {
+                        const newText = currentText ? `${genderText}, ${currentText}` : genderText;
+                        setFormData(prev => ({ ...prev, target_customer: newText }));
+                      }
+                    }}
+                    className={`px-3 py-1.5 text-sm rounded-full border-2 transition-all ${
+                      formData.target_customer.includes(gender)
+                        ? 'bg-yellow-400 border-yellow-500 text-gray-900 font-semibold'
+                        : 'bg-white border-gray-300 text-gray-700 hover:border-yellow-400 hover:bg-yellow-50'
+                    }`}
+                  >
+                    {gender}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <FieldOptions
+              options={FIELD_OPTIONS.target_customer}
+              onSelect={(value) => setFormData(prev => ({ ...prev, target_customer: value }))}
+              currentValue={formData.target_customer}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 오버레이 */}
+      {isPresetPanelOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-30 z-40"
+          onClick={() => setIsPresetPanelOpen(false)}
+        />
+      )}
+
       <div className="max-w-4xl mx-auto">
         <header className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-3">
@@ -221,15 +313,8 @@ export default function Home() {
                   placeholder="예: 화려한 색상, 과격한 스포츠 활동 강조"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
                 />
-                <div className="mt-3">
-                  <FieldOptions
-                    options={FIELD_OPTIONS.differentiation_concept}
-                    onSelect={(value) => setFormData(prev => ({ ...prev, differentiation_concept: value }))}
-                    currentValue={formData.differentiation_concept}
-                  />
-                </div>
                 <p className="mt-2 text-xs text-gray-500">
-                  💡 경쟁사가 사용하는 이미지나 컨셉을 입력하면, 차별화된 시나리오를 생성합니다
+                  💡 경쟁사가 사용하는 이미지나 컨셉을 입력하면, 차별화된 시나리오를 생성합니다 (좌측 프리셋 버튼 활용)
                 </p>
               </div>
 
@@ -246,46 +331,9 @@ export default function Home() {
                   placeholder="예: 조용한 환경에서 집중을 원하는 20~30대 직장인/학생"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
                 />
-                <div className="mt-3">
-                  {/* 성별 선택 버튼 */}
-                  <div className="mb-3">
-                    <p className="text-xs font-semibold text-gray-500 uppercase mb-2">성별</p>
-                    <div className="flex flex-wrap gap-2">
-                      {['남성', '여성', '혼성'].map((gender) => (
-                        <button
-                          key={gender}
-                          type="button"
-                          onClick={() => {
-                            const currentText = formData.target_customer;
-                            const genderText = `${gender} 타겟`;
-                            // 이미 있으면 교체, 없으면 추가
-                            const hasGender = currentText.includes('남성') || currentText.includes('여성') || currentText.includes('혼성');
-                            if (hasGender) {
-                              const newText = currentText
-                                .replace(/남성 타겟|여성 타겟|혼성 타겟/g, genderText);
-                              setFormData(prev => ({ ...prev, target_customer: newText }));
-                            } else {
-                              const newText = currentText ? `${genderText}, ${currentText}` : genderText;
-                              setFormData(prev => ({ ...prev, target_customer: newText }));
-                            }
-                          }}
-                          className={`px-3 py-1.5 text-sm rounded-full border-2 transition-all ${
-                            formData.target_customer.includes(gender)
-                              ? 'bg-yellow-400 border-yellow-500 text-gray-900 font-semibold'
-                              : 'bg-white border-gray-300 text-gray-700 hover:border-yellow-400 hover:bg-yellow-50'
-                          }`}
-                        >
-                          {gender}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <FieldOptions
-                    options={FIELD_OPTIONS.target_customer}
-                    onSelect={(value) => setFormData(prev => ({ ...prev, target_customer: value }))}
-                    currentValue={formData.target_customer}
-                  />
-                </div>
+                <p className="mt-2 text-xs text-gray-500">
+                  💡 좌측 프리셋 버튼을 눌러 빠르게 입력하세요
+                </p>
               </div>
             </div>
           </section>

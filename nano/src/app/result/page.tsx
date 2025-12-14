@@ -334,27 +334,31 @@ function ResultContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-yellow-100 py-12 px-4">
       <div className="max-w-7xl mx-auto">
-        <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">
-            생성 완료! 🎉
-          </h1>
-          <p className="text-lg text-gray-600">
+        {/* 헤더 with 홈 버튼 */}
+        <header className="mb-8">
+          <div className="relative mb-3">
+            <button
+              onClick={() => router.push('/')}
+              className="absolute left-0 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+            >
+              🏠 홈
+            </button>
+            <h1 className="text-4xl font-bold text-gray-900 text-center">
+              생성 완료! 🎉
+            </h1>
+          </div>
+          <p className="text-lg text-gray-600 text-center">
             15개의 촬영 시나리오가 준비되었습니다
           </p>
         </header>
 
-        <div className="mb-6 flex gap-4 justify-center flex-wrap">
+        {/* 네비게이션 버튼들 */}
+        <div className="mb-6 flex items-center justify-between gap-4">
           <button
             onClick={() => router.push(`/edit?id=${projectId}`)}
             className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
           >
-            ✏️ 기본 정보 수정
-          </button>
-          <button
-            onClick={() => router.push(`/detail-page/${projectId}`)}
-            className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-          >
-            📄 상세페이지 편집
+            ← 기본정보수정
           </button>
           <button
             onClick={() => setShowDeleted(!showDeleted)}
@@ -367,16 +371,10 @@ function ResultContent() {
             {showDeleted ? '🗑️ 삭제된 항목 숨기기' : '🗑️ 삭제된 항목 보기'}
           </button>
           <button
-            onClick={() => router.push('/new')}
-            className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold py-3 px-6 rounded-lg transition-colors"
+            onClick={() => router.push(`/detail-page/${projectId}`)}
+            className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
           >
-            + 새로 만들기
-          </button>
-          <button
-            onClick={() => router.push('/')}
-            className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-          >
-            📁 목록으로
+            상세페이지 편집 →
           </button>
         </div>
 

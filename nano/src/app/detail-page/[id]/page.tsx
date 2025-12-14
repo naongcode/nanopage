@@ -120,6 +120,7 @@ export default function DetailPage() {
   const [commonSettings, setCommonSettings] = useState<CommonBlockSettings>(DEFAULT_COMMON_SETTINGS);
   const [editingCropId, setEditingCropId] = useState<string | null>(null);
   const [editingStyleId, setEditingStyleId] = useState<string | null>(null);
+  const [showPresetPanel, setShowPresetPanel] = useState<boolean>(false);
   const detailPageRef = useRef<HTMLDivElement>(null);
 
   const sensors = useSensors(
@@ -452,17 +453,15 @@ export default function DetailPage() {
       {/* 헤더 & 컨트롤 */}
       <div className="max-w-4xl mx-auto px-4 mb-6">
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold">{project.project_name} - 상세페이지</h1>
+          <div className="flex items-center gap-4">
+            {/* 뒤로 버튼 */}
             <button
               onClick={() => router.back()}
               className="text-gray-600 hover:text-gray-800"
             >
               ← 뒤로
             </button>
-          </div>
 
-          <div className="flex items-center gap-4">
             {/* 템플릿 선택 */}
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium">템플릿:</label>
@@ -538,53 +537,7 @@ export default function DetailPage() {
               </div>
             </div>
 
-            {/* 가운데: 간단한 아이콘 컨트롤 */}
-            <div className="w-20 flex-shrink-0 space-y-8">
-              {scenarios.map((scenario, index) => {
-                const isEditingCrop = editingCropId === scenario.id;
-                const isEditingStyle = editingStyleId === scenario.id;
-                const presetConfig = getLayoutPresetConfig(scenario.layout_preset);
-
-                return (
-                  <div key={`control-${scenario.id}`} className="bg-white rounded-lg shadow-md p-2 flex flex-col gap-2 sticky top-4">
-                    <div className="text-xs font-bold text-gray-500 text-center">{index + 1}</div>
-
-                    {/* 레이아웃 프리셋 아이콘 */}
-                    <div className="text-2xl text-center" title={presetConfig.name}>
-                      {presetConfig.icon}
-                    </div>
-
-                    {/* 이미지 자르기 버튼 */}
-                    <button
-                      onClick={() => setEditingCropId(isEditingCrop ? null : scenario.id!)}
-                      className={`w-full p-2 text-xl rounded transition ${
-                        isEditingCrop
-                          ? 'bg-green-50 border-2 border-green-500'
-                          : 'bg-blue-50 hover:bg-blue-100 border border-blue-200'
-                      }`}
-                      title="이미지 자르기"
-                    >
-                      ✂️
-                    </button>
-
-                    {/* 스타일 편집 버튼 */}
-                    <button
-                      onClick={() => setEditingStyleId(isEditingStyle ? null : scenario.id!)}
-                      className={`w-full p-2 text-xl rounded transition ${
-                        isEditingStyle
-                          ? 'bg-purple-50 border-2 border-purple-500'
-                          : 'bg-gray-50 hover:bg-gray-100 border border-gray-200'
-                      }`}
-                      title="스타일 편집"
-                    >
-                      ✏️
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* 오른쪽: 상세페이지 미리보기 + 편집 패널 */}
+            {/* 오른쪽: 상세페이지 미리보기 + 컨트롤 + 편집 패널 */}
             <div className="flex-1 min-w-0">
               <div className="space-y-8">
                 {scenarios.map((scenario, index) => {
@@ -595,19 +548,65 @@ export default function DetailPage() {
 
                   return (
                     <div key={scenario.id} className="space-y-4">
-                      {/* 프리셋 선택기 (다운로드 제외) */}
-                      <div className="no-download">
-                        <LayoutPresetSelector
-                          scenarioId={scenario.id!}
-                          currentPreset={scenario.layout_preset}
-                          onPresetChange={(presetId) => handlePresetChange(scenario.id!, presetId)}
-                        />
-                      </div>
-
                       <div className="flex gap-4 items-start">
-                        {/* 편집 패널 (해당 블록 왼쪽에 표시) */}
-                        {isEditingStyle && (
-                          <div className="w-80 flex-shrink-0 no-download">
+                        {/* 가운데: 아이콘 컨트롤 (각 블록 옆에 위치) */}
+                        <div className="w-20 flex-shrink-0">
+                          <div className="bg-white rounded-lg shadow-md p-2 flex flex-col gap-2 sticky top-4">
+                            <div className="text-xs font-bold text-gray-500 text-center">{index + 1}</div>
+
+                            {/* 프리셋 버튼 */}
+                            <button
+                              onClick={() => setShowPresetPanel(!showPresetPanel)}
+                              className={`w-full p-2 text-xl rounded transition ${
+                                showPresetPanel
+                                  ? 'bg-purple-50 border-2 border-purple-500'
+                                  : 'bg-gray-50 hover:bg-gray-100 border border-gray-200'
+                              }`}
+                              title="프리셋 설정"
+                            >
+                              📋
+                            </button>
+
+                            {/* 이미지 자르기 버튼 */}
+                            <button
+                              onClick={() => setEditingCropId(isEditingCrop ? null : scenario.id!)}
+                              className={`w-full p-2 text-xl rounded transition ${
+                                isEditingCrop
+                                  ? 'bg-green-50 border-2 border-green-500'
+                                  : 'bg-blue-50 hover:bg-blue-100 border border-blue-200'
+                              }`}
+                              title="이미지 자르기"
+                            >
+                              ✂️
+                            </button>
+
+                            {/* 스타일 편집 버튼 */}
+                            <button
+                              onClick={() => setEditingStyleId(isEditingStyle ? null : scenario.id!)}
+                              className={`w-full p-2 text-xl rounded transition ${
+                                isEditingStyle
+                                  ? 'bg-orange-50 border-2 border-orange-500'
+                                  : 'bg-gray-50 hover:bg-gray-100 border border-gray-200'
+                              }`}
+                              title="스타일 편집"
+                            >
+                              ✏️
+                            </button>
+                          </div>
+                        </div>
+                        {/* 편집 패널 (해당 블록 왼쪽에 항상 공간 확보) */}
+                        <div className="w-80 flex-shrink-0 space-y-4 no-download">
+                          {/* 프리셋 선택기 */}
+                          {showPresetPanel && (
+                            <LayoutPresetSelector
+                              scenarioId={scenario.id!}
+                              currentPreset={scenario.layout_preset}
+                              onPresetChange={(presetId) => handlePresetChange(scenario.id!, presetId)}
+                            />
+                          )}
+
+                          {/* 스타일 편집 패널 */}
+                          {isEditingStyle && (
                             <BlockStyleOverridePanel
                               scenarioId={scenario.id!}
                               blockStyle={scenario.block_style || null}
@@ -618,8 +617,8 @@ export default function DetailPage() {
                                 );
                               }}
                             />
-                          </div>
-                        )}
+                          )}
+                        </div>
 
                         {/* 블록 콘텐츠 (다운로드될 영역) */}
                         <div
@@ -632,9 +631,10 @@ export default function DetailPage() {
                           }`}
                         >
                         <div
-                          className="relative mx-auto bg-white"
+                          className="relative mx-auto bg-white flex items-center justify-center"
                           style={{
                             width: effectiveStyle.blockWidth,
+                            height: effectiveStyle.blockHeight || 'auto',
                             backgroundColor: effectiveStyle.blockBackgroundColor,
                             padding: '20px',
                           }}

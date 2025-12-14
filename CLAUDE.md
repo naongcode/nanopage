@@ -49,7 +49,10 @@ nano/
 │   │   ├── new/
 │   │   │   └── page.tsx (새 프로젝트 생성)
 │   │   ├── edit/
-│   │   │   └── page.tsx (프로젝트 수정) ⭐ 신규
+│   │   │   └── page.tsx (프로젝트 수정)
+│   │   ├── detail-page/
+│   │   │   └── [id]/
+│   │   │       └── page.tsx (상세페이지 편집 - 드래그, 자르기, 스타일 편집)
 │   │   ├── projects/
 │   │   │   └── page.tsx (프로젝트 목록)
 │   │   ├── result/
@@ -57,11 +60,19 @@ nano/
 │   │   └── setup/
 │   │       └── page.tsx (설정 페이지)
 │   ├── components/
-│   │   └── FieldOptions.tsx
+│   │   ├── FieldOptions.tsx (필드 옵션 선택)
+│   │   ├── CommonSettingsPanel.tsx (공통 블록 스타일 설정)
+│   │   ├── BlockStyleOverridePanel.tsx (개별 블록 스타일 설정)
+│   │   ├── ImageWithCrop.tsx (이미지 자르기 컴포넌트)
+│   │   ├── LayoutPresetSelector.tsx (레이아웃 프리셋 선택)
+│   │   └── LayoutBlock.tsx (블록 레이아웃 렌더링)
 │   ├── lib/
-│   │   ├── field-options.ts
-│   │   ├── supabase.ts
-│   │   └── templates.ts
+│   │   ├── field-options.ts (필드 옵션 설정)
+│   │   ├── supabase.ts (Supabase 클라이언트)
+│   │   ├── templates.ts (프롬프트 템플릿)
+│   │   ├── gemini.ts (Gemini AI 연동)
+│   │   ├── layout-presets.ts (레이아웃 프리셋 설정)
+│   │   └── block-settings-defaults.ts (블록 스타일 기본값)
 │   └── types/
 │       └── index.ts
 ├── public/
