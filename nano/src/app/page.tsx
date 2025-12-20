@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Project } from '@/types';
 
-export default function ProjectsPage() {
+export default function HomePage() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,10 +66,10 @@ export default function ProjectsPage() {
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center">
           <p className="text-red-600 text-lg mb-4">{error}</p>
           <button
-            onClick={() => router.push('/')}
+            onClick={() => window.location.reload()}
             className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2 px-6 rounded-lg"
           >
-            홈으로 돌아가기
+            다시 시도
           </button>
         </div>
       </div>
@@ -81,7 +81,7 @@ export default function ProjectsPage() {
       <div className="max-w-6xl mx-auto">
         <header className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">프로젝트 목록 📁</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">나노바나나 🍌</h1>
             <p className="text-gray-600">
               총 {projects.length}개의 프로젝트
             </p>
@@ -107,75 +107,76 @@ export default function ProjectsPage() {
             </button>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {projects.map((project) => (
               <div
                 key={project.id}
-                className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow p-6 cursor-pointer"
+                className="group bg-white rounded-lg shadow hover:shadow-xl transition-all p-2 cursor-pointer relative"
                 onClick={() => router.push(`/result?id=${project.id}`)}
               >
-                {/* 제품 이미지 */}
-                {project.product_images && project.product_images.length > 0 && (
-                  <div className="mb-4 h-40 bg-gray-100 rounded-lg overflow-hidden">
+                {/* 삭제 버튼 - 우측 상단 */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(project.id!);
+                  }}
+                  className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white text-xs rounded-full transition-colors z-20 opacity-0 group-hover:opacity-100"
+                  title="삭제"
+                >
+                  ✕
+                </button>
+
+                {/* 제품 썸네일 */}
+                {project.product_images && project.product_images.length > 0 ? (
+                  <div className="w-full aspect-square bg-gray-100 rounded-lg overflow-hidden mb-2">
                     <img
                       src={project.product_images[0]}
                       alt={project.project_name}
                       className="w-full h-full object-cover"
                     />
                   </div>
+                ) : (
+                  <div className="w-full aspect-square bg-gray-200 rounded-lg flex items-center justify-center text-3xl mb-2">
+                    📦
+                  </div>
                 )}
 
                 {/* 프로젝트 정보 */}
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-gray-900 truncate">
-                    {project.project_name}
-                  </h3>
-                  <p className="text-sm text-gray-500">{project.category}</p>
-                  <p className="text-sm text-gray-600 line-clamp-2">
-                    타겟: {project.target_customer}
-                  </p>
-
-                  {/* 셀링 포인트 */}
-                  <div className="flex flex-wrap gap-1 pt-2">
-                    {[
-                      project.selling_point_1,
-                      project.selling_point_2,
-                      project.selling_point_3,
-                    ].map((point, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-block text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full"
-                      >
-                        {point}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* 날짜 */}
-                  <p className="text-xs text-gray-400 pt-2">
-                    {new Date(project.created_at!).toLocaleDateString('ko-KR')}
-                  </p>
-                </div>
+                <h3 className="font-bold text-gray-900 truncate text-sm mb-1 pr-6">
+                  {project.project_name}
+                </h3>
+                <p className="text-xs text-gray-500 truncate mb-2">
+                  {project.category}
+                </p>
 
                 {/* 액션 버튼 */}
-                <div className="flex gap-2 mt-4 pt-4 border-t">
+                <div className="grid grid-cols-3 gap-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/edit?id=${project.id}`);
+                    }}
+                    className="bg-green-500 hover:bg-green-600 text-white text-xs font-semibold py-1.5 px-1 rounded transition-colors"
+                  >
+                    입력
+                  </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       router.push(`/result?id=${project.id}`);
                     }}
-                    className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors"
+                    className="bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold py-1.5 px-1 rounded transition-colors"
                   >
-                    결과 보기
+                    시나리오
                   </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDelete(project.id!);
+                      router.push(`/editor/${project.id}`);
                     }}
-                    className="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors"
+                    className="bg-purple-500 hover:bg-purple-600 text-white text-xs font-semibold py-1.5 px-1 rounded transition-colors"
                   >
-                    삭제
+                    상세
                   </button>
                 </div>
               </div>

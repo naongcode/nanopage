@@ -34,6 +34,7 @@ export interface Project {
   category: string;
   differentiation_concept: string;
   target_customer: string;
+  shooting_concept?: string; // 촬영 컨셉 (보여주고 싶은 장면)
   selling_point_1: string;
   selling_point_2: string;
   selling_point_3: string;
@@ -100,6 +101,7 @@ export interface CreateProjectRequest {
   category: string;
   differentiation_concept: string;
   target_customer: string;
+  shooting_concept?: string; // 촬영 컨셉 (보여주고 싶은 장면)
   product_images?: string[];
 
   // Step 2: AI가 자동 생성 (선택사항, 사용자가 직접 입력할 수도 있음)

@@ -45,7 +45,7 @@ function BlockListItem({
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: isDragging ? 'none' : transition, // 드래그 중엔 애니메이션 제거
     opacity: isDragging ? 0.5 : 1,
   };
 
@@ -53,29 +53,15 @@ function BlockListItem({
     <div
       ref={setNodeRef}
       style={style}
+      {...attributes}
+      {...listeners}
       onClick={onSelect}
-      className={`group relative flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
+      className={`group relative flex items-center gap-3 p-3 rounded-xl cursor-grab active:cursor-grabbing transition-all ${
         isSelected
           ? 'bg-violet-600/20 ring-2 ring-violet-500'
           : 'bg-slate-800/50 hover:bg-slate-700/50'
       }`}
     >
-      {/* 드래그 핸들 */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="flex-shrink-0 cursor-grab active:cursor-grabbing text-slate-500 hover:text-slate-300"
-      >
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-          <circle cx="9" cy="6" r="1.5" />
-          <circle cx="15" cy="6" r="1.5" />
-          <circle cx="9" cy="12" r="1.5" />
-          <circle cx="15" cy="12" r="1.5" />
-          <circle cx="9" cy="18" r="1.5" />
-          <circle cx="15" cy="18" r="1.5" />
-        </svg>
-      </div>
-
       {/* 번호 */}
       <div className={`flex-shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold ${
         isSelected ? 'bg-violet-500 text-white' : 'bg-slate-700 text-slate-300'
@@ -1387,7 +1373,11 @@ export default function EditorPage() {
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5, // 5px 이동 후 드래그 시작 (클릭과 구분)
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
