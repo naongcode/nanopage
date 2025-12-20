@@ -29,6 +29,12 @@ export async function PATCH(
     if (body.text_height !== undefined) updateData.text_height = body.text_height;
     if (body.block_style !== undefined) updateData.block_style = body.block_style;
     if (body.image_crop !== undefined) updateData.image_crop = body.image_crop;
+    if (body.additional_image_urls !== undefined) {
+      updateData.additional_image_urls = body.additional_image_urls;
+    }
+    if ((body as any).selected_image_url !== undefined) {
+      updateData.selected_image_url = (body as any).selected_image_url;
+    }
 
     // Supabase에서 시나리오 업데이트
     const { data, error } = await supabase

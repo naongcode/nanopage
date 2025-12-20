@@ -103,6 +103,9 @@ function CanvasBlock({
   onTitleChange,
   onSubtitleChange,
   onDescriptionChange,
+  onAdditionalImageAdd,
+  onAdditionalImageRemove,
+  onImagesReorder,
 }: {
   scenario: Scenario;
   index: number;
@@ -112,9 +115,100 @@ function CanvasBlock({
   onTitleChange: (text: string) => void;
   onSubtitleChange: (text: string) => void;
   onDescriptionChange: (text: string) => void;
+  onAdditionalImageAdd?: (slotIndex: number, file: File) => void;
+  onAdditionalImageRemove?: (slotIndex: number) => void;
+  onImagesReorder?: (fromIndex: number, toIndex: number) => void;
 }) {
   const [editingField, setEditingField] = useState<'title' | 'subtitle' | 'description' | null>(null);
+  const [draggedSlot, setDraggedSlot] = useState<number | null>(null);
+  const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);
   const preset = scenario.layout_preset || 'vertical';
+
+  // 멀티 이미지 슬롯 렌더링
+  const renderImageSlot = (slotIndex: number, isMain: boolean = false) => {
+    const imgUrl = slotIndex === 0
+      ? scenario.selected_image_url
+      : scenario.additional_image_urls?.[slotIndex - 1];
+
+    const isDragging = draggedSlot === slotIndex;
+    const isDragOver = dragOverSlot === slotIndex && draggedSlot !== slotIndex;
+
+    return (
+      <div
+        key={slotIndex}
+        draggable={!!imgUrl}
+        onDragStart={(e) => {
+          setDraggedSlot(slotIndex);
+          e.dataTransfer.effectAllowed = 'move';
+        }}
+        onDragEnd={() => {
+          setDraggedSlot(null);
+          setDragOverSlot(null);
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOverSlot(slotIndex);
+        }}
+        onDragLeave={() => setDragOverSlot(null)}
+        onDrop={(e) => {
+          e.preventDefault();
+          if (draggedSlot !== null && draggedSlot !== slotIndex && onImagesReorder) {
+            onImagesReorder(draggedSlot, slotIndex);
+          }
+          setDraggedSlot(null);
+          setDragOverSlot(null);
+        }}
+        className={`relative group bg-slate-200 flex items-center justify-center overflow-hidden transition-all h-full
+          ${isDragging ? 'opacity-50 scale-95' : ''}
+          ${isDragOver ? 'ring-4 ring-violet-500 ring-inset' : ''}
+          ${imgUrl ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
+        `}
+      >
+        {imgUrl ? (
+          <>
+            <img src={imgUrl} alt="" className="w-full h-full object-cover" crossOrigin="anonymous" />
+            {/* 삭제 버튼 (메인 이미지 제외) */}
+            {slotIndex > 0 && onAdditionalImageRemove && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAdditionalImageRemove(slotIndex - 1);
+                }}
+                className="absolute top-2 right-2 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-sm font-bold shadow-lg"
+              >
+                x
+              </button>
+            )}
+            {/* 드래그 힌트 */}
+            <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
+              드래그로 이동
+            </div>
+          </>
+        ) : (
+          <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-300 transition-colors">
+            <svg className="w-10 h-10 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span className="text-slate-500 text-sm font-medium">
+              {isMain ? '메인 이미지' : `이미지 ${slotIndex + 1}`}
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file && onAdditionalImageAdd) {
+                  onAdditionalImageAdd(slotIndex, file);
+                }
+                e.target.value = '';
+              }}
+            />
+          </label>
+        )}
+      </div>
+    );
+  };
 
   const title = scenario.title_text || '';
   const subtitle = scenario.subtitle_text || '';
@@ -849,6 +943,121 @@ function CanvasBlock({
           </div>
         );
 
+      // ===== 멀티 이미지: 3단 가로 =====
+      case 'triple-row':
+        return (
+          <div className="flex flex-col">
+            <div className="grid grid-cols-3 gap-2" style={{ minHeight: '250px' }}>
+              {renderImageSlot(0, true)}
+              {renderImageSlot(1)}
+              {renderImageSlot(2)}
+            </div>
+            <div className="p-6">{TextContent}</div>
+          </div>
+        );
+
+      // ===== 멀티 이미지: 3단 세로 =====
+      case 'triple-column':
+        return (
+          <div className="flex min-h-[500px]">
+            <div className="flex flex-col gap-2 w-3/5">
+              {renderImageSlot(0, true)}
+              {renderImageSlot(1)}
+              {renderImageSlot(2)}
+            </div>
+            <div className="w-2/5 flex flex-col justify-center p-6">{TextContent}</div>
+          </div>
+        );
+
+      // ===== 멀티 이미지: 메인+서브 =====
+      case 'triple-featured':
+        return (
+          <div className="flex flex-col">
+            <div className="grid grid-cols-2 grid-rows-2 gap-2" style={{ height: '400px' }}>
+              <div className="row-span-2">
+                {renderImageSlot(0, true)}
+              </div>
+              {renderImageSlot(1)}
+              {renderImageSlot(2)}
+            </div>
+            <div className="p-6">{TextContent}</div>
+          </div>
+        );
+
+      // ===== 멀티 이미지: 매거진 그리드 =====
+      case 'triple-masonry':
+        return (
+          <div className="grid grid-cols-3 gap-1" style={{ minHeight: '450px' }}>
+            {/* 메인 이미지 (2/3) + 텍스트 오버레이 */}
+            <div className="col-span-2 row-span-2 relative">
+              {renderImageSlot(0, true)}
+              {/* 하단 그라데이션 + 텍스트 */}
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-20 pb-6 px-6">
+                <div className="space-y-2">
+                  {editingField === 'title' ? (
+                    <input
+                      type="text"
+                      defaultValue={title}
+                      placeholder="제목"
+                      className="w-full text-2xl font-bold bg-transparent border-b border-white/50 outline-none text-white"
+                      style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
+                      onBlur={(e) => { onTitleChange(e.target.value); setEditingField(null); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { onTitleChange(e.currentTarget.value); setEditingField(null); }}}
+                      autoFocus
+                    />
+                  ) : (
+                    <h3
+                      onClick={(e) => { e.stopPropagation(); setEditingField('title'); }}
+                      className="text-2xl font-bold text-white cursor-text hover:opacity-80 transition"
+                      style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
+                    >
+                      {title || '제목을 입력하세요'}
+                    </h3>
+                  )}
+                  {editingField === 'subtitle' ? (
+                    <input
+                      type="text"
+                      defaultValue={subtitle}
+                      placeholder="부제목"
+                      className="w-full text-sm bg-transparent border-b border-white/30 outline-none text-white/80"
+                      onBlur={(e) => { onSubtitleChange(e.target.value); setEditingField(null); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { onSubtitleChange(e.currentTarget.value); setEditingField(null); }}}
+                      autoFocus
+                    />
+                  ) : subtitle ? (
+                    <p
+                      onClick={(e) => { e.stopPropagation(); setEditingField('subtitle'); }}
+                      className="text-sm text-white/80 cursor-text hover:opacity-80"
+                    >
+                      {subtitle}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+            {/* 우측 서브 이미지들 (1/3) */}
+            <div className="row-span-2 flex flex-col gap-1">
+              <div className="flex-1 relative">
+                {renderImageSlot(1)}
+              </div>
+              <div className="flex-1 relative">
+                {renderImageSlot(2)}
+                {/* 본문은 마지막 이미지 하단에 작게 */}
+                {description && (
+                  <div
+                    className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3"
+                    onClick={(e) => { e.stopPropagation(); setEditingField('description'); }}
+                  >
+                    <p className="text-xs text-white/90 line-clamp-2 cursor-text hover:opacity-80">
+                      {description}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
       // ===== 기본 (vertical) =====
       default:
         return (
@@ -929,6 +1138,11 @@ function PropertyPanel({
     { id: 'quote', label: '인용문', icon: '💬', category: '특수' },
     { id: 'fullwidth', label: '전체폭', icon: '🌅', category: '특수' },
     { id: 'image-dominant', label: '캡션', icon: '🖼️', category: '특수' },
+    // 멀티 이미지 (3개)
+    { id: 'triple-row', label: '3단 가로', icon: '🖼️', category: '멀티' },
+    { id: 'triple-column', label: '3단 세로', icon: '📋', category: '멀티' },
+    { id: 'triple-featured', label: '메인+서브', icon: '🎨', category: '멀티' },
+    { id: 'triple-masonry', label: '매거진3', icon: '📰', category: '멀티' },
   ];
 
   const FONT_FAMILIES = [
@@ -1354,6 +1568,7 @@ const RANDOM_LAYOUTS: LayoutPreset[] = [
   'horizontal-left', 'horizontal-right', 'magazine', 'split',
   'overlay-center', 'overlay-top', 'overlay-bottom',
   'hero', 'minimal', 'quote', 'fullwidth', 'image-dominant',
+  'triple-row', 'triple-column', 'triple-featured', 'triple-masonry',
 ];
 
 export default function EditorPage() {
@@ -1528,6 +1743,129 @@ export default function EditorPage() {
       );
     } catch (error) {
       console.error('Error changing layout:', error);
+    }
+  };
+
+  // 추가 이미지 업로드
+  const handleAdditionalImageAdd = async (scenarioId: string, slotIndex: number, file: File) => {
+    try {
+      // FormData로 업로드
+      const formData = new FormData();
+      formData.append('images', file);
+
+      const uploadRes = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        const errorData = await uploadRes.json();
+        throw new Error(errorData.error || '이미지 업로드 실패');
+      }
+
+      const { urls } = await uploadRes.json();
+      const url = urls[0];
+
+      // 현재 시나리오 가져오기
+      const scenario = scenarios.find((s) => s.id === scenarioId);
+      const currentImages = scenario?.additional_image_urls || [];
+
+      // 슬롯 인덱스에 맞게 배열 업데이트
+      const newImages = [...currentImages];
+      if (slotIndex === 0) {
+        // 메인 이미지는 selected_image_url 업데이트
+        await fetch(`/api/scenarios/${scenarioId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ selected_image_url: url }),
+        });
+        setScenarios((prev) =>
+          prev.map((s) => (s.id === scenarioId ? { ...s, selected_image_url: url } : s))
+        );
+      } else {
+        // 추가 이미지는 additional_image_urls 업데이트
+        newImages[slotIndex - 1] = url;
+        await fetch(`/api/scenarios/${scenarioId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ additional_image_urls: newImages }),
+        });
+        setScenarios((prev) =>
+          prev.map((s) => (s.id === scenarioId ? { ...s, additional_image_urls: newImages } : s))
+        );
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('이미지 업로드에 실패했습니다.');
+    }
+  };
+
+  // 추가 이미지 삭제
+  const handleAdditionalImageRemove = async (scenarioId: string, slotIndex: number) => {
+    try {
+      const scenario = scenarios.find((s) => s.id === scenarioId);
+      const currentImages = scenario?.additional_image_urls || [];
+
+      // 해당 슬롯의 이미지를 빈 문자열로 설정 (위치 유지)
+      const newImages = [...currentImages];
+      newImages[slotIndex] = '';
+
+      await fetch(`/api/scenarios/${scenarioId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ additional_image_urls: newImages }),
+      });
+
+      setScenarios((prev) =>
+        prev.map((s) => (s.id === scenarioId ? { ...s, additional_image_urls: newImages } : s))
+      );
+    } catch (error) {
+      console.error('Error removing image:', error);
+    }
+  };
+
+  // 이미지 순서 변경
+  const handleImagesReorder = async (scenarioId: string, fromIndex: number, toIndex: number) => {
+    try {
+      const scenario = scenarios.find((s) => s.id === scenarioId);
+      if (!scenario) return;
+
+      // 모든 이미지를 하나의 배열로 만듦 (메인 + 추가)
+      const allImages = [
+        scenario.selected_image_url || '',
+        ...(scenario.additional_image_urls || []),
+      ];
+
+      // 3개 슬롯 보장
+      while (allImages.length < 3) allImages.push('');
+
+      // 위치 교환
+      const temp = allImages[fromIndex];
+      allImages[fromIndex] = allImages[toIndex];
+      allImages[toIndex] = temp;
+
+      // 업데이트 데이터 준비
+      const newMainImage = allImages[0];
+      const newAdditionalImages = allImages.slice(1);
+
+      await fetch(`/api/scenarios/${scenarioId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          selected_image_url: newMainImage,
+          additional_image_urls: newAdditionalImages,
+        }),
+      });
+
+      setScenarios((prev) =>
+        prev.map((s) =>
+          s.id === scenarioId
+            ? { ...s, selected_image_url: newMainImage, additional_image_urls: newAdditionalImages }
+            : s
+        )
+      );
+    } catch (error) {
+      console.error('Error reordering images:', error);
     }
   };
 
@@ -1765,6 +2103,9 @@ export default function EditorPage() {
                     onTitleChange={(text) => handleTitleEdit(scenario.id!, text)}
                     onSubtitleChange={(text) => handleSubtitleEdit(scenario.id!, text)}
                     onDescriptionChange={(text) => handleDescriptionEdit(scenario.id!, text)}
+                    onAdditionalImageAdd={(slotIndex, file) => handleAdditionalImageAdd(scenario.id!, slotIndex, file)}
+                    onAdditionalImageRemove={(slotIndex) => handleAdditionalImageRemove(scenario.id!, slotIndex)}
+                    onImagesReorder={(from, to) => handleImagesReorder(scenario.id!, from, to)}
                   />
                 </div>
               ))}

@@ -65,7 +65,12 @@ export type LayoutPreset =
   | 'minimal'               // 미니멀 (여백 많고 깔끔)
   | 'quote'                 // 인용문 스타일 (큰 따옴표)
   | 'fullwidth'             // 전체 폭 이미지 + 플로팅 텍스트 박스
-  | 'split';                // 비대칭 분할 (7:3)
+  | 'split'                 // 비대칭 분할 (7:3)
+  // 멀티 이미지 레이아웃 (3개 이미지)
+  | 'triple-row'            // 3개 이미지 가로 나란히 + 하단 텍스트
+  | 'triple-column'         // 3개 이미지 세로 나란히 + 우측 텍스트
+  | 'triple-featured'       // 1개 큰 이미지 + 2개 작은 이미지 (비대칭)
+  | 'triple-masonry';       // 매거진 스타일 그리드
 
 // 시나리오 타입 정의
 export interface Scenario {
@@ -81,7 +86,8 @@ export interface Scenario {
   description_text?: string;  // AI 생성 설명글 (본문)
   user_edited_description_text?: string | null;  // 사용자 수정 설명글
   generated_image_urls?: string[];  // 생성된 모든 이미지들
-  selected_image_url?: string | null;  // 현재 선택된 이미지
+  selected_image_url?: string | null;  // 현재 선택된 이미지 (메인)
+  additional_image_urls?: string[];  // 추가 이미지 URL들 (멀티 이미지 레이아웃용)
   layout_preset?: LayoutPreset | null;  // 레이아웃 프리셋
   text_position_x?: number;  // 텍스트 X 좌표
   text_position_y?: number | null;  // 텍스트 Y 좌표 (NULL이면 기본 레이아웃)
@@ -139,4 +145,5 @@ export interface UpdateScenarioRequest {
   text_height?: number | null;
   block_style?: BlockStyle | null;  // 개별 블록 스타일
   image_crop?: ImageCrop | null;  // 이미지 자르기
+  additional_image_urls?: string[];  // 추가 이미지 URL들
 }

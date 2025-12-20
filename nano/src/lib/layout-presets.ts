@@ -6,10 +6,11 @@ export interface LayoutPresetConfig {
   description: string;
   icon: string;
   preview: string; // 미리보기 이미지 또는 이모지
-  layoutType: 'vertical' | 'horizontal' | 'overlay';
+  layoutType: 'vertical' | 'horizontal' | 'overlay' | 'multi-image';
   imageSize: number; // 이미지 영역 비율 (%)
   textSize: number; // 텍스트 영역 비율 (%)
   isOverlay: boolean; // 텍스트가 이미지 위에 오버레이되는지
+  imageCount?: number; // 멀티 이미지 레이아웃일 때 이미지 개수
   defaultTextPosition?: {
     // 오버레이 타입일 때의 기본 텍스트 위치
     x: number;
@@ -214,6 +215,61 @@ export const LAYOUT_PRESETS: Record<LayoutPreset, LayoutPresetConfig> = {
     imageSize: 70,
     textSize: 30,
     isOverlay: false,
+  },
+  // 멀티 이미지 레이아웃 (3개 이미지)
+  'triple-row': {
+    id: 'triple-row',
+    name: '3단 가로형',
+    description: '3개의 이미지가 가로로 나란히 + 하단 텍스트',
+    icon: '🖼️🖼️🖼️',
+    preview: '▭▭▭\n━',
+    layoutType: 'multi-image',
+    imageSize: 70,
+    textSize: 30,
+    isOverlay: false,
+    imageCount: 3,
+  },
+  'triple-column': {
+    id: 'triple-column',
+    name: '3단 세로형',
+    description: '3개의 이미지가 세로로 + 우측 텍스트',
+    icon: '📋',
+    preview: '▭\n▭ ━\n▭',
+    layoutType: 'multi-image',
+    imageSize: 60,
+    textSize: 40,
+    isOverlay: false,
+    imageCount: 3,
+  },
+  'triple-featured': {
+    id: 'triple-featured',
+    name: '메인+서브',
+    description: '1개 큰 이미지 + 2개 작은 이미지 (비대칭)',
+    icon: '🎨',
+    preview: '▭▭\n▭▭',
+    layoutType: 'multi-image',
+    imageSize: 75,
+    textSize: 25,
+    isOverlay: false,
+    imageCount: 3,
+  },
+  'triple-masonry': {
+    id: 'triple-masonry',
+    name: '매거진 그리드',
+    description: '매거진 스타일 비대칭 그리드 + 오버레이 텍스트',
+    icon: '📰',
+    preview: '▭▭\n▭▭',
+    layoutType: 'multi-image',
+    imageSize: 100,
+    textSize: 0,
+    isOverlay: true,
+    imageCount: 3,
+    defaultTextPosition: {
+      x: 30,
+      y: 350,
+      width: 400,
+      height: 100,
+    },
   },
 };
 

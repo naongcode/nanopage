@@ -16,6 +16,8 @@ interface LayoutBlockProps {
   onSubtitleEdit: (text: string) => void;
   onDescriptionEdit: (text: string) => void;
   onTextPositionChange: (x: number, y: number, width: number, height: number) => void;
+  onAdditionalImageAdd?: (index: number, url: string) => void;
+  onAdditionalImageRemove?: (index: number) => void;
 }
 
 type EditingField = 'title' | 'subtitle' | 'description' | null;
@@ -30,6 +32,8 @@ export function LayoutBlock({
   onSubtitleEdit,
   onDescriptionEdit,
   onTextPositionChange,
+  onAdditionalImageAdd,
+  onAdditionalImageRemove,
 }: LayoutBlockProps) {
   const [editingField, setEditingField] = useState<EditingField>(null);
 
@@ -299,6 +303,167 @@ export function LayoutBlock({
         <div className="flex items-center w-full gap-6">
           <div style={{ width: imageWidth }}>{ImageContent}</div>
           <div style={{ width: textWidth }} className="px-4 py-6">{TextContent}</div>
+        </div>
+      );
+    }
+  }
+
+  // 멀티 이미지 레이아웃
+  if (presetConfig.layoutType === 'multi-image') {
+    const mainImage = scenario.selected_image_url || '';
+    const additionalImages = scenario.additional_image_urls || [];
+    const allImages = [mainImage, ...additionalImages];
+
+    // 이미지 슬롯 컴포넌트
+    const ImageSlot = ({ index, imageUrl }: { index: number; imageUrl?: string }) => (
+      <div className="relative group bg-gray-100 flex items-center justify-center overflow-hidden h-full">
+        {imageUrl ? (
+          <>
+            <img
+              src={imageUrl}
+              alt={`이미지 ${index + 1}`}
+              className="w-full h-full object-cover"
+            />
+            {onAdditionalImageRemove && index > 0 && (
+              <button
+                onClick={() => onAdditionalImageRemove(index - 1)}
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-sm"
+              >
+                x
+              </button>
+            )}
+          </>
+        ) : (
+          <label className="cursor-pointer flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors">
+            <svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span className="text-sm">이미지 {index + 1}</span>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file && onAdditionalImageAdd) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    onAdditionalImageAdd(index - 1, reader.result as string);
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+            />
+          </label>
+        )}
+      </div>
+    );
+
+    // triple-row: 3개 가로 나란히 + 하단 텍스트
+    if (presetConfig.id === 'triple-row') {
+      return (
+        <div className="w-full">
+          <div className="grid grid-cols-3 gap-2" style={{ minHeight: '250px' }}>
+            <ImageSlot index={0} imageUrl={allImages[0]} />
+            <ImageSlot index={1} imageUrl={allImages[1]} />
+            <ImageSlot index={2} imageUrl={allImages[2]} />
+          </div>
+          <div className="py-5 px-4">{TextContent}</div>
+        </div>
+      );
+    }
+
+    // triple-column: 3개 세로 + 우측 텍스트
+    if (presetConfig.id === 'triple-column') {
+      return (
+        <div className="flex w-full" style={{ minHeight: '500px' }}>
+          <div className="flex flex-col gap-2" style={{ width: '60%' }}>
+            <div style={{ height: '33.33%' }}>
+              <ImageSlot index={0} imageUrl={allImages[0]} />
+            </div>
+            <div style={{ height: '33.33%' }}>
+              <ImageSlot index={1} imageUrl={allImages[1]} />
+            </div>
+            <div style={{ height: '33.33%' }}>
+              <ImageSlot index={2} imageUrl={allImages[2]} />
+            </div>
+          </div>
+          <div className="flex-1 px-6 py-4 flex flex-col justify-center">{TextContent}</div>
+        </div>
+      );
+    }
+
+    // triple-featured: 1개 큰 이미지 + 2개 작은 이미지
+    if (presetConfig.id === 'triple-featured') {
+      return (
+        <div className="w-full">
+          <div className="grid grid-cols-2 gap-2" style={{ minHeight: '400px' }}>
+            <div className="row-span-2">
+              <ImageSlot index={0} imageUrl={allImages[0]} />
+            </div>
+            <div>
+              <ImageSlot index={1} imageUrl={allImages[1]} />
+            </div>
+            <div>
+              <ImageSlot index={2} imageUrl={allImages[2]} />
+            </div>
+          </div>
+          <div className="py-5 px-4">{TextContent}</div>
+        </div>
+      );
+    }
+
+    // triple-masonry: 매거진 스타일 + 오버레이 텍스트
+    if (presetConfig.id === 'triple-masonry') {
+      return (
+        <div className="relative" style={{ minHeight: '500px' }}>
+          <div className="grid grid-cols-3 grid-rows-2 gap-1 h-full" style={{ minHeight: '500px' }}>
+            <div className="col-span-2 row-span-2">
+              <ImageSlot index={0} imageUrl={allImages[0]} />
+            </div>
+            <div>
+              <ImageSlot index={1} imageUrl={allImages[1]} />
+            </div>
+            <div>
+              <ImageSlot index={2} imageUrl={allImages[2]} />
+            </div>
+          </div>
+          <Rnd
+            position={{
+              x: scenario.text_position_x || presetConfig.defaultTextPosition?.x || 30,
+              y: scenario.text_position_y || presetConfig.defaultTextPosition?.y || 350,
+            }}
+            size={{
+              width: scenario.text_width || presetConfig.defaultTextPosition?.width || 400,
+              height: scenario.text_height || presetConfig.defaultTextPosition?.height || 'auto',
+            }}
+            onDragStop={(e, d) => {
+              onTextPositionChange(
+                d.x,
+                d.y,
+                scenario.text_width || presetConfig.defaultTextPosition?.width || 400,
+                scenario.text_height || presetConfig.defaultTextPosition?.height || 100
+              );
+            }}
+            onResizeStop={(e, direction, ref, delta, position) => {
+              onTextPositionChange(
+                position.x,
+                position.y,
+                parseInt(ref.style.width),
+                parseInt(ref.style.height)
+              );
+            }}
+            bounds="parent"
+            className="border border-dashed border-gray-400"
+            style={{ borderRadius: '4px' }}
+          >
+            <div
+              className="h-full p-4"
+              style={{ backgroundColor: 'rgba(255,255,255,0.95)' }}
+            >
+              {TextContent}
+            </div>
+          </Rnd>
         </div>
       );
     }

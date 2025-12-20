@@ -453,6 +453,83 @@ export default function DetailPage() {
     }
   };
 
+  // 추가 이미지 업로드 (멀티 이미지 레이아웃용)
+  const handleAdditionalImageAdd = async (scenarioId: string, index: number, imageDataUrl: string) => {
+    try {
+      // 먼저 이미지를 Supabase에 업로드
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imageDataUrl }),
+      });
+
+      if (!response.ok) throw new Error('이미지 업로드 실패');
+
+      const { url } = await response.json();
+
+      // 현재 시나리오의 추가 이미지 배열 가져오기
+      const scenario = scenarios.find((s) => s.id === scenarioId);
+      const currentImages = scenario?.additional_image_urls || [];
+
+      // 새 이미지 배열 생성 (인덱스 위치에 추가)
+      const newImages = [...currentImages];
+      newImages[index] = url;
+
+      // API로 저장
+      const updateResponse = await fetch(`/api/scenarios/${scenarioId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ additional_image_urls: newImages }),
+      });
+
+      if (!updateResponse.ok) throw new Error('추가 이미지 저장 실패');
+
+      // 로컬 상태 업데이트
+      setScenarios((prev) =>
+        prev.map((s) =>
+          s.id === scenarioId
+            ? { ...s, additional_image_urls: newImages }
+            : s
+        )
+      );
+    } catch (error) {
+      console.error('Error adding additional image:', error);
+      alert('이미지 추가에 실패했습니다.');
+    }
+  };
+
+  // 추가 이미지 삭제
+  const handleAdditionalImageRemove = async (scenarioId: string, index: number) => {
+    try {
+      const scenario = scenarios.find((s) => s.id === scenarioId);
+      const currentImages = scenario?.additional_image_urls || [];
+
+      // 해당 인덱스의 이미지 제거
+      const newImages = currentImages.filter((_, i) => i !== index);
+
+      // API로 저장
+      const response = await fetch(`/api/scenarios/${scenarioId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ additional_image_urls: newImages }),
+      });
+
+      if (!response.ok) throw new Error('추가 이미지 삭제 실패');
+
+      // 로컬 상태 업데이트
+      setScenarios((prev) =>
+        prev.map((s) =>
+          s.id === scenarioId
+            ? { ...s, additional_image_urls: newImages }
+            : s
+        )
+      );
+    } catch (error) {
+      console.error('Error removing additional image:', error);
+      alert('이미지 삭제에 실패했습니다.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -661,6 +738,12 @@ export default function DetailPage() {
                             onDescriptionEdit={(text) => handleDescriptionEdit(scenario.id!, text)}
                             onTextPositionChange={(x, y, width, height) =>
                               handleTextPositionChange(scenario.id!, x, y, width, height)
+                            }
+                            onAdditionalImageAdd={(index, url) =>
+                              handleAdditionalImageAdd(scenario.id!, index, url)
+                            }
+                            onAdditionalImageRemove={(index) =>
+                              handleAdditionalImageRemove(scenario.id!, index)
                             }
                           />
                         </div>

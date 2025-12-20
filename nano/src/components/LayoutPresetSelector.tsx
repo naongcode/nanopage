@@ -96,6 +96,67 @@ const SIMPLE_PRESETS: {
       </div>
     ),
   },
+  // 멀티 이미지 레이아웃
+  {
+    id: 'triple-row',
+    label: '3단 가로',
+    visual: (
+      <div className="flex flex-col gap-1 w-full">
+        <div className="flex gap-0.5 h-6">
+          <div className="bg-blue-400 flex-1 rounded" />
+          <div className="bg-blue-300 flex-1 rounded" />
+          <div className="bg-blue-200 flex-1 rounded" />
+        </div>
+        <div className="bg-gray-300 h-3 rounded" />
+      </div>
+    ),
+  },
+  {
+    id: 'triple-column',
+    label: '3단 세로',
+    visual: (
+      <div className="flex gap-1 w-full h-10">
+        <div className="flex flex-col gap-0.5 w-1/2">
+          <div className="bg-blue-400 flex-1 rounded" />
+          <div className="bg-blue-300 flex-1 rounded" />
+          <div className="bg-blue-200 flex-1 rounded" />
+        </div>
+        <div className="bg-gray-300 w-1/2 rounded" />
+      </div>
+    ),
+  },
+  {
+    id: 'triple-featured',
+    label: '메인+서브',
+    visual: (
+      <div className="flex flex-col gap-1 w-full">
+        <div className="flex gap-0.5 h-7">
+          <div className="bg-blue-400 w-1/2 rounded" />
+          <div className="flex flex-col gap-0.5 w-1/2">
+            <div className="bg-blue-300 flex-1 rounded" />
+            <div className="bg-blue-200 flex-1 rounded" />
+          </div>
+        </div>
+        <div className="bg-gray-300 h-2 rounded" />
+      </div>
+    ),
+  },
+  {
+    id: 'triple-masonry',
+    label: '매거진3',
+    visual: (
+      <div className="relative w-full h-10">
+        <div className="flex gap-0.5 h-full">
+          <div className="bg-blue-400 w-2/3 rounded" />
+          <div className="flex flex-col gap-0.5 w-1/3">
+            <div className="bg-blue-300 flex-1 rounded" />
+            <div className="bg-blue-200 flex-1 rounded" />
+          </div>
+        </div>
+        <div className="absolute bottom-1 left-1 right-1 bg-white/80 h-2 rounded" />
+      </div>
+    ),
+  },
 ];
 
 export function LayoutPresetSelector({
