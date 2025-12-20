@@ -116,11 +116,10 @@ export default function DetailPage() {
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTemplate, setSelectedTemplate] = useState<'coupang' | 'naver' | 'minimal'>('coupang');
-  const [editingScenarioId, setEditingScenarioId] = useState<string | null>(null);
   const [commonSettings, setCommonSettings] = useState<CommonBlockSettings>(DEFAULT_COMMON_SETTINGS);
   const [editingCropId, setEditingCropId] = useState<string | null>(null);
   const [editingStyleId, setEditingStyleId] = useState<string | null>(null);
-  const [showPresetPanel, setShowPresetPanel] = useState<boolean>(false);
+  const [presetModalScenarioId, setPresetModalScenarioId] = useState<string | null>(null);
   const detailPageRef = useRef<HTMLDivElement>(null);
 
   const sensors = useSensors(
@@ -183,6 +182,38 @@ export default function DetailPage() {
     }
   };
 
+  const handleTitleEdit = async (scenarioId: string, newTitle: string) => {
+    try {
+      const response = await fetch(`/api/scenarios/${scenarioId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title_text: newTitle }),
+      });
+      if (!response.ok) throw new Error('제목 저장 실패');
+      setScenarios((prev) =>
+        prev.map((s) => (s.id === scenarioId ? { ...s, title_text: newTitle } : s))
+      );
+    } catch (error) {
+      console.error('Error saving title:', error);
+    }
+  };
+
+  const handleSubtitleEdit = async (scenarioId: string, newSubtitle: string) => {
+    try {
+      const response = await fetch(`/api/scenarios/${scenarioId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subtitle_text: newSubtitle }),
+      });
+      if (!response.ok) throw new Error('부제목 저장 실패');
+      setScenarios((prev) =>
+        prev.map((s) => (s.id === scenarioId ? { ...s, subtitle_text: newSubtitle } : s))
+      );
+    } catch (error) {
+      console.error('Error saving subtitle:', error);
+    }
+  };
+
   const handleDescriptionEdit = async (scenarioId: string, newDescription: string) => {
     try {
       const response = await fetch(`/api/scenarios/${scenarioId}`, {
@@ -195,7 +226,6 @@ export default function DetailPage() {
 
       if (!response.ok) throw new Error('설명글 저장 실패');
 
-      // 로컬 상태 업데이트
       setScenarios((prev) =>
         prev.map((s) =>
           s.id === scenarioId
@@ -203,11 +233,8 @@ export default function DetailPage() {
             : s
         )
       );
-
-      setEditingScenarioId(null);
     } catch (error) {
       console.error('Error saving description:', error);
-      alert('설명글 저장에 실패했습니다.');
     }
   };
 
@@ -556,13 +583,9 @@ export default function DetailPage() {
 
                             {/* 프리셋 버튼 */}
                             <button
-                              onClick={() => setShowPresetPanel(!showPresetPanel)}
-                              className={`w-full p-2 text-xl rounded transition ${
-                                showPresetPanel
-                                  ? 'bg-purple-50 border-2 border-purple-500'
-                                  : 'bg-gray-50 hover:bg-gray-100 border border-gray-200'
-                              }`}
-                              title="프리셋 설정"
+                              onClick={() => setPresetModalScenarioId(scenario.id!)}
+                              className="w-full p-2 text-xl rounded transition bg-gray-50 hover:bg-gray-100 border border-gray-200"
+                              title="레이아웃 변경"
                             >
                               📋
                             </button>
@@ -594,19 +617,9 @@ export default function DetailPage() {
                             </button>
                           </div>
                         </div>
-                        {/* 편집 패널 (해당 블록 왼쪽에 항상 공간 확보) */}
-                        <div className="w-80 flex-shrink-0 space-y-4 no-download">
-                          {/* 프리셋 선택기 */}
-                          {showPresetPanel && (
-                            <LayoutPresetSelector
-                              scenarioId={scenario.id!}
-                              currentPreset={scenario.layout_preset}
-                              onPresetChange={(presetId) => handlePresetChange(scenario.id!, presetId)}
-                            />
-                          )}
-
-                          {/* 스타일 편집 패널 */}
-                          {isEditingStyle && (
+                        {/* 편집 패널 */}
+                        {isEditingStyle && (
+                          <div className="w-72 flex-shrink-0 no-download">
                             <BlockStyleOverridePanel
                               scenarioId={scenario.id!}
                               blockStyle={scenario.block_style || null}
@@ -617,8 +630,8 @@ export default function DetailPage() {
                                 );
                               }}
                             />
-                          )}
-                        </div>
+                          </div>
+                        )}
 
                         {/* 블록 콘텐츠 (다운로드될 영역) */}
                         <div
@@ -631,23 +644,21 @@ export default function DetailPage() {
                           }`}
                         >
                         <div
-                          className="relative mx-auto bg-white flex items-center justify-center"
+                          className="relative mx-auto bg-white overflow-hidden"
                           style={{
                             width: effectiveStyle.blockWidth,
-                            height: effectiveStyle.blockHeight || 'auto',
                             backgroundColor: effectiveStyle.blockBackgroundColor,
-                            padding: '20px',
                           }}
                         >
                           <LayoutBlock
                             scenario={scenario}
                             effectiveStyle={effectiveStyle}
                             isEditingCrop={isEditingCrop}
-                            editingScenarioId={editingScenarioId}
                             onCropSave={(crop) => handleCropSave(scenario.id!, crop)}
                             onCropEditComplete={() => setEditingCropId(null)}
+                            onTitleEdit={(text) => handleTitleEdit(scenario.id!, text)}
+                            onSubtitleEdit={(text) => handleSubtitleEdit(scenario.id!, text)}
                             onDescriptionEdit={(text) => handleDescriptionEdit(scenario.id!, text)}
-                            onEditingChange={setEditingScenarioId}
                             onTextPositionChange={(x, y, width, height) =>
                               handleTextPositionChange(scenario.id!, x, y, width, height)
                             }
@@ -663,6 +674,37 @@ export default function DetailPage() {
           </div>
         </DndContext>
       </div>
+
+      {/* 레이아웃 프리셋 모달 */}
+      {presetModalScenarioId && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setPresetModalScenarioId(null)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">레이아웃 선택</h3>
+              <button
+                onClick={() => setPresetModalScenarioId(null)}
+                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+            <LayoutPresetSelector
+              scenarioId={presetModalScenarioId}
+              currentPreset={scenarios.find(s => s.id === presetModalScenarioId)?.layout_preset}
+              onPresetChange={(presetId) => {
+                handlePresetChange(presetModalScenarioId, presetId);
+                setPresetModalScenarioId(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

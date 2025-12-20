@@ -1,7 +1,6 @@
 'use client';
 
 import { LayoutPreset } from '@/types';
-import { getLayoutPresetList } from '@/lib/layout-presets';
 
 interface LayoutPresetSelectorProps {
   scenarioId: string;
@@ -9,89 +8,125 @@ interface LayoutPresetSelectorProps {
   onPresetChange: (presetId: LayoutPreset) => void;
 }
 
+// 간단한 프리셋 정의 (시각적 미리보기 중심)
+const SIMPLE_PRESETS: {
+  id: LayoutPreset;
+  label: string;
+  visual: React.ReactNode;
+}[] = [
+  {
+    id: 'vertical',
+    label: '기본',
+    visual: (
+      <div className="flex flex-col gap-1 w-full">
+        <div className="bg-gray-400 h-8 rounded" />
+        <div className="bg-gray-300 h-3 rounded" />
+      </div>
+    ),
+  },
+  {
+    id: 'text-first',
+    label: '텍스트 위',
+    visual: (
+      <div className="flex flex-col gap-1 w-full">
+        <div className="bg-gray-300 h-3 rounded" />
+        <div className="bg-gray-400 h-8 rounded" />
+      </div>
+    ),
+  },
+  {
+    id: 'horizontal-left',
+    label: '좌 이미지',
+    visual: (
+      <div className="flex gap-1 w-full h-10">
+        <div className="bg-gray-400 flex-1 rounded" />
+        <div className="bg-gray-300 flex-1 rounded" />
+      </div>
+    ),
+  },
+  {
+    id: 'horizontal-right',
+    label: '우 이미지',
+    visual: (
+      <div className="flex gap-1 w-full h-10">
+        <div className="bg-gray-300 flex-1 rounded" />
+        <div className="bg-gray-400 flex-1 rounded" />
+      </div>
+    ),
+  },
+  {
+    id: 'image-dominant',
+    label: '이미지 중심',
+    visual: (
+      <div className="flex flex-col gap-0.5 w-full">
+        <div className="bg-gray-400 h-9 rounded" />
+        <div className="bg-gray-300 h-2 rounded" />
+      </div>
+    ),
+  },
+  {
+    id: 'card',
+    label: '카드',
+    visual: (
+      <div className="flex flex-col w-full border border-gray-300 rounded overflow-hidden">
+        <div className="bg-gray-400 h-6" />
+        <div className="bg-white h-4 p-0.5">
+          <div className="bg-gray-300 h-full rounded-sm" />
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'magazine',
+    label: '매거진',
+    visual: (
+      <div className="flex gap-1 w-full h-10">
+        <div className="bg-gray-400 w-3/5 rounded" />
+        <div className="bg-gray-300 w-2/5 rounded" />
+      </div>
+    ),
+  },
+  {
+    id: 'overlay-center',
+    label: '오버레이',
+    visual: (
+      <div className="relative w-full h-10">
+        <div className="absolute inset-0 bg-gray-400 rounded" />
+        <div className="absolute inset-x-2 top-1/2 -translate-y-1/2 bg-white/80 h-4 rounded" />
+      </div>
+    ),
+  },
+];
+
 export function LayoutPresetSelector({
   scenarioId,
   currentPreset,
   onPresetChange,
 }: LayoutPresetSelectorProps) {
-  const presets = getLayoutPresetList();
   const activePreset = currentPreset || 'vertical';
 
-  const handlePresetClick = async (presetId: LayoutPreset) => {
-    try {
-      onPresetChange(presetId);
-    } catch (error) {
-      console.error('Error applying preset:', error);
-      alert('프리셋 적용에 실패했습니다.');
-    }
-  };
-
   return (
-    <div className="bg-white rounded-lg shadow-md border-2 border-purple-200">
-      <div className="p-3 border-b bg-purple-50">
-        <h3 className="font-bold text-purple-900">레이아웃 프리셋</h3>
-        <p className="text-xs text-purple-600 mt-1">
-          이미지와 텍스트 배치 스타일을 선택하세요
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2 p-3 max-h-96 overflow-y-auto">
-        {presets.map((preset) => (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
+      <div className="text-xs text-gray-500 mb-2">레이아웃</div>
+      <div className="grid grid-cols-4 gap-2">
+        {SIMPLE_PRESETS.map((preset) => (
           <button
             key={preset.id}
-            onClick={() => handlePresetClick(preset.id)}
-            className={`p-2 rounded-lg border-2 transition text-left hover:shadow-md ${
+            onClick={() => onPresetChange(preset.id)}
+            className={`p-2 rounded-lg border-2 transition-all ${
               activePreset === preset.id
-                ? 'bg-purple-100 border-purple-500'
-                : 'bg-white border-gray-200 hover:border-purple-300'
+                ? 'border-purple-500 bg-purple-50'
+                : 'border-gray-100 hover:border-gray-300 bg-gray-50'
             }`}
+            title={preset.label}
           >
-            <div className="flex items-start gap-2 mb-2">
-              <span className="text-2xl">{preset.icon}</span>
-              <div className="flex-1 min-w-0">
-                <div className={`text-sm font-semibold ${
-                  activePreset === preset.id ? 'text-purple-900' : 'text-gray-900'
-                }`}>
-                  {preset.name}
-                </div>
-                {activePreset === preset.id && (
-                  <div className="text-xs text-purple-600 font-medium">✓ 적용 중</div>
-                )}
-              </div>
+            <div className="w-full aspect-square flex items-center justify-center p-1">
+              {preset.visual}
             </div>
-
-            <div className="text-xs text-gray-600 mb-2 line-clamp-2">
-              {preset.description}
-            </div>
-
-            {/* 레이아웃 미리보기 */}
-            <div className="bg-gray-50 rounded p-2 flex items-center justify-center">
-              <div
-                className="text-xs font-mono text-gray-400 whitespace-pre-line text-center"
-                style={{ lineHeight: '1.2' }}
-              >
-                {preset.preview}
-              </div>
-            </div>
-
-            {/* 레이아웃 타입 배지 */}
-            <div className="mt-2 flex gap-1">
-              <span className={`px-2 py-0.5 text-xs rounded ${
-                preset.layoutType === 'vertical'
-                  ? 'bg-blue-100 text-blue-700'
-                  : preset.layoutType === 'horizontal'
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-orange-100 text-orange-700'
-              }`}>
-                {preset.layoutType === 'vertical' && '세로'}
-                {preset.layoutType === 'horizontal' && '가로'}
-                {preset.layoutType === 'overlay' && '오버레이'}
-              </span>
-              {preset.isOverlay && (
-                <span className="px-2 py-0.5 text-xs rounded bg-purple-100 text-purple-700">
-                  드래그
-                </span>
-              )}
+            <div className={`text-xs mt-1 truncate text-center ${
+              activePreset === preset.id ? 'text-purple-700 font-medium' : 'text-gray-500'
+            }`}>
+              {preset.label}
             </div>
           </button>
         ))}

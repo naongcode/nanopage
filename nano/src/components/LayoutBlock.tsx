@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Scenario, CommonBlockSettings } from '@/types';
 import { getLayoutPresetConfig } from '@/lib/layout-presets';
 import { ImageWithCrop } from './ImageWithCrop';
@@ -9,93 +10,174 @@ interface LayoutBlockProps {
   scenario: Scenario;
   effectiveStyle: CommonBlockSettings;
   isEditingCrop: boolean;
-  editingScenarioId: string | null;
   onCropSave: (crop: any) => void;
   onCropEditComplete: () => void;
+  onTitleEdit: (text: string) => void;
+  onSubtitleEdit: (text: string) => void;
   onDescriptionEdit: (text: string) => void;
-  onEditingChange: (scenarioId: string | null) => void;
   onTextPositionChange: (x: number, y: number, width: number, height: number) => void;
 }
+
+type EditingField = 'title' | 'subtitle' | 'description' | null;
 
 export function LayoutBlock({
   scenario,
   effectiveStyle,
   isEditingCrop,
-  editingScenarioId,
   onCropSave,
   onCropEditComplete,
+  onTitleEdit,
+  onSubtitleEdit,
   onDescriptionEdit,
-  onEditingChange,
   onTextPositionChange,
 }: LayoutBlockProps) {
+  const [editingField, setEditingField] = useState<EditingField>(null);
+
   const presetConfig = getLayoutPresetConfig(scenario.layout_preset);
-  const displayDescription = scenario.user_edited_description_text || scenario.description_text || '';
+
+  const title = scenario.title_text || '';
+  const subtitle = scenario.subtitle_text || '';
+  const description = scenario.user_edited_description_text || scenario.description_text || '';
 
   // 이미지 컴포넌트
-  const ImageComponent = (
-    <div className={presetConfig.layoutType === 'horizontal' ? 'flex-shrink-0' : 'w-full'}>
-      {isEditingCrop ? (
-        <ImageWithCrop
-          imageUrl={scenario.selected_image_url || ''}
-          crop={scenario.image_crop || null}
-          isEditing={true}
-          onCropChange={onCropSave}
-          onEditComplete={onCropEditComplete}
-        />
-      ) : (
-        <ImageWithCrop
-          imageUrl={scenario.selected_image_url || ''}
-          crop={scenario.image_crop || null}
-          isEditing={false}
-          onCropChange={() => {}}
-          onEditComplete={() => {}}
-        />
-      )}
-    </div>
+  const ImageContent = isEditingCrop ? (
+    <ImageWithCrop
+      imageUrl={scenario.selected_image_url || ''}
+      crop={scenario.image_crop || null}
+      isEditing={true}
+      onCropChange={onCropSave}
+      onEditComplete={onCropEditComplete}
+    />
+  ) : (
+    <ImageWithCrop
+      imageUrl={scenario.selected_image_url || ''}
+      crop={scenario.image_crop || null}
+      isEditing={false}
+      onCropChange={() => {}}
+      onEditComplete={() => {}}
+    />
   );
 
-  // 텍스트 컴포넌트
-  const TextComponent = (
-    <div className={presetConfig.layoutType === 'horizontal' ? 'flex-1' : 'w-full'}>
-      {editingScenarioId === scenario.id ? (
-        <textarea
-          defaultValue={displayDescription}
-          className="w-full p-3 border rounded-lg resize-none"
-          rows={presetConfig.layoutType === 'horizontal' ? 10 : 3}
+  // 3단계 텍스트 컴포넌트
+  const TextContent = (
+    <div className="space-y-3">
+      {/* 제목 */}
+      {editingField === 'title' ? (
+        <input
+          type="text"
+          defaultValue={title}
+          className="w-full px-2 py-1 text-2xl font-bold border-b-2 border-gray-300 focus:border-gray-500 outline-none bg-transparent"
           style={{
             fontFamily: effectiveStyle.textFontFamily,
-            fontSize: `${effectiveStyle.textFontSize}px`,
             color: effectiveStyle.textColor,
-            fontWeight: effectiveStyle.textFontWeight,
+            textAlign: effectiveStyle.textAlign,
           }}
-          onBlur={(e) => onDescriptionEdit(e.target.value)}
+          onBlur={(e) => {
+            onTitleEdit(e.target.value);
+            setEditingField(null);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              onTitleEdit(e.currentTarget.value);
+              setEditingField(null);
+            }
+          }}
+          autoFocus
+        />
+      ) : (
+        <h2
+          onClick={() => setEditingField('title')}
+          className="text-2xl font-bold cursor-pointer hover:opacity-70 transition-opacity"
+          style={{
+            fontFamily: effectiveStyle.textFontFamily,
+            color: effectiveStyle.textColor,
+            textAlign: effectiveStyle.textAlign,
+            lineHeight: '1.4',
+          }}
+        >
+          {title || '제목을 입력하세요'}
+        </h2>
+      )}
+
+      {/* 부제목 */}
+      {editingField === 'subtitle' ? (
+        <input
+          type="text"
+          defaultValue={subtitle}
+          className="w-full px-2 py-1 text-sm border-b border-gray-200 focus:border-gray-400 outline-none bg-transparent"
+          style={{
+            fontFamily: effectiveStyle.textFontFamily,
+            color: '#888',
+            textAlign: effectiveStyle.textAlign,
+          }}
+          onBlur={(e) => {
+            onSubtitleEdit(e.target.value);
+            setEditingField(null);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              onSubtitleEdit(e.currentTarget.value);
+              setEditingField(null);
+            }
+          }}
           autoFocus
         />
       ) : (
         <p
-          onClick={() => onEditingChange(scenario.id || null)}
-          className="cursor-pointer hover:bg-gray-100 p-3 rounded transition whitespace-pre-line"
+          onClick={() => setEditingField('subtitle')}
+          className="text-sm cursor-pointer hover:opacity-70 transition-opacity"
+          style={{
+            fontFamily: effectiveStyle.textFontFamily,
+            color: '#888',
+            textAlign: effectiveStyle.textAlign,
+            lineHeight: '1.5',
+          }}
+        >
+          {subtitle || '부제목을 입력하세요'}
+        </p>
+      )}
+
+      {/* 본문 */}
+      {editingField === 'description' ? (
+        <textarea
+          defaultValue={description}
+          className="w-full p-2 border border-gray-200 rounded resize-none focus:ring-1 focus:ring-gray-300 outline-none"
+          rows={3}
           style={{
             fontFamily: effectiveStyle.textFontFamily,
             fontSize: `${effectiveStyle.textFontSize}px`,
             color: effectiveStyle.textColor,
-            fontWeight: effectiveStyle.textFontWeight,
+            lineHeight: '1.8',
+          }}
+          onBlur={(e) => {
+            onDescriptionEdit(e.target.value);
+            setEditingField(null);
+          }}
+          autoFocus
+        />
+      ) : (
+        <p
+          onClick={() => setEditingField('description')}
+          className="cursor-pointer hover:opacity-70 transition-opacity whitespace-pre-line"
+          style={{
+            fontFamily: effectiveStyle.textFontFamily,
+            fontSize: `${effectiveStyle.textFontSize}px`,
+            color: effectiveStyle.textColor,
             textAlign: effectiveStyle.textAlign,
+            lineHeight: '1.8',
+            letterSpacing: '0.02em',
           }}
         >
-          {displayDescription || '설명글을 입력하려면 클릭하세요'}
+          {description || '본문을 입력하세요'}
         </p>
       )}
     </div>
   );
 
-  // 오버레이 타입 (텍스트가 이미지 위에)
+  // 오버레이 타입
   if (presetConfig.isOverlay) {
-    const hasCustomPosition = scenario.text_position_y !== null && scenario.text_position_y !== undefined;
-
     return (
       <div className="relative" style={{ minHeight: '600px', width: '100%' }}>
-        {/* 배경 이미지 */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="w-full h-full">
             {isEditingCrop ? (
@@ -107,21 +189,15 @@ export function LayoutBlock({
                 onEditComplete={onCropEditComplete}
               />
             ) : (
-              <div className="w-full h-full">
-                <img
-                  src={scenario.selected_image_url || ''}
-                  alt="배경 이미지"
-                  className="w-full h-full object-cover"
-                  style={{
-                    objectFit: 'cover',
-                  }}
-                />
-              </div>
+              <img
+                src={scenario.selected_image_url || ''}
+                alt=""
+                className="w-full h-full object-cover"
+              />
             )}
           </div>
         </div>
 
-        {/* 오버레이 텍스트 (드래그 가능) */}
         <Rnd
           position={{
             x: scenario.text_position_x || presetConfig.defaultTextPosition?.x || 50,
@@ -148,42 +224,14 @@ export function LayoutBlock({
             );
           }}
           bounds="parent"
-          className="border-2 border-blue-500 shadow-lg"
-          style={{
-            borderRadius: '8px',
-          }}
+          className="border border-dashed border-gray-400"
+          style={{ borderRadius: '4px' }}
         >
           <div
-            className="h-full p-3 bg-white/90 backdrop-blur-sm rounded-lg"
-            style={{
-              fontFamily: effectiveStyle.textFontFamily,
-              fontSize: `${effectiveStyle.textFontSize}px`,
-              color: effectiveStyle.textColor,
-              fontWeight: effectiveStyle.textFontWeight,
-              textAlign: effectiveStyle.textAlign,
-            }}
+            className="h-full p-4"
+            style={{ backgroundColor: 'rgba(255,255,255,0.95)' }}
           >
-            {editingScenarioId === scenario.id ? (
-              <textarea
-                defaultValue={displayDescription}
-                className="w-full h-full p-2 border rounded resize-none bg-transparent"
-                style={{
-                  fontFamily: effectiveStyle.textFontFamily,
-                  fontSize: `${effectiveStyle.textFontSize}px`,
-                  color: effectiveStyle.textColor,
-                  fontWeight: effectiveStyle.textFontWeight,
-                }}
-                onBlur={(e) => onDescriptionEdit(e.target.value)}
-                autoFocus
-              />
-            ) : (
-              <p
-                onClick={() => onEditingChange(scenario.id || null)}
-                className="cursor-pointer whitespace-pre-line"
-              >
-                {displayDescription || '설명글을 입력하려면 클릭하세요'}
-              </p>
-            )}
+            {TextContent}
           </div>
         </Rnd>
       </div>
@@ -193,41 +241,31 @@ export function LayoutBlock({
   // 세로형 레이아웃
   if (presetConfig.layoutType === 'vertical') {
     if (presetConfig.id === 'text-first') {
-      // 텍스트 먼저
       return (
-        <div className="space-y-4">
-          {TextComponent}
-          {ImageComponent}
+        <div className="w-full">
+          <div className="py-6 px-4">{TextContent}</div>
+          <div className="w-full">{ImageContent}</div>
         </div>
       );
     } else if (presetConfig.id === 'image-dominant') {
-      // 이미지 중심 (작은 캡션)
       return (
-        <div className="space-y-2">
-          {ImageComponent}
-          <div className="text-sm text-gray-600 px-2">
-            {TextComponent}
-          </div>
+        <div className="w-full">
+          <div className="w-full">{ImageContent}</div>
+          <div className="py-3 px-4">{TextContent}</div>
         </div>
       );
     } else if (presetConfig.id === 'card') {
-      // 카드형
       return (
-        <div className="rounded-xl overflow-hidden shadow-lg bg-white">
-          <div className="aspect-square overflow-hidden">
-            {ImageComponent}
-          </div>
-          <div className="p-4">
-            {TextComponent}
-          </div>
+        <div className="w-full">
+          <div className="aspect-square overflow-hidden">{ImageContent}</div>
+          <div className="py-6 px-4">{TextContent}</div>
         </div>
       );
     } else {
-      // 기본 세로형 (vertical)
       return (
-        <div className="space-y-4">
-          {ImageComponent}
-          {TextComponent}
+        <div className="w-full">
+          <div className="w-full">{ImageContent}</div>
+          <div className="py-5 px-4">{TextContent}</div>
         </div>
       );
     }
@@ -235,41 +273,42 @@ export function LayoutBlock({
 
   // 가로형 레이아웃
   if (presetConfig.layoutType === 'horizontal') {
-    const imageWidth = presetConfig.id === 'magazine' ? '60%' : '50%';
-    const textWidth = presetConfig.id === 'magazine' ? '40%' : '50%';
+    const imageWidth = presetConfig.id === 'magazine' ? '55%' : '50%';
+    const textWidth = presetConfig.id === 'magazine' ? '45%' : '50%';
 
-    if (presetConfig.id === 'horizontal-right') {
-      // 텍스트 좌 + 이미지 우
+    if (presetConfig.id === 'magazine') {
       return (
-        <div className="flex gap-6 items-center">
-          <div style={{ width: textWidth }}>
-            {TextComponent}
-          </div>
-          <div style={{ width: imageWidth }}>
-            {ImageComponent}
+        <div className="flex items-stretch w-full" style={{ minHeight: '400px' }}>
+          <div style={{ width: imageWidth }}>{ImageContent}</div>
+          <div style={{ width: textWidth }} className="flex flex-col justify-center px-8 py-6">
+            {TextContent}
           </div>
         </div>
       );
-    } else {
-      // 이미지 좌 + 텍스트 우 (horizontal-left, magazine)
+    }
+
+    if (presetConfig.id === 'horizontal-right') {
       return (
-        <div className="flex gap-6 items-center">
-          <div style={{ width: imageWidth }}>
-            {ImageComponent}
-          </div>
-          <div style={{ width: textWidth }}>
-            {TextComponent}
-          </div>
+        <div className="flex items-center w-full gap-6">
+          <div style={{ width: textWidth }} className="px-4 py-6">{TextContent}</div>
+          <div style={{ width: imageWidth }}>{ImageContent}</div>
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex items-center w-full gap-6">
+          <div style={{ width: imageWidth }}>{ImageContent}</div>
+          <div style={{ width: textWidth }} className="px-4 py-6">{TextContent}</div>
         </div>
       );
     }
   }
 
-  // 기본값 (세로형)
+  // 기본값
   return (
-    <div className="space-y-4">
-      {ImageComponent}
-      {TextComponent}
+    <div className="w-full">
+      <div className="w-full">{ImageContent}</div>
+      <div className="py-5 px-4">{TextContent}</div>
     </div>
   );
 }

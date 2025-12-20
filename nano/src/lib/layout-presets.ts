@@ -148,6 +148,73 @@ export const LAYOUT_PRESETS: Record<LayoutPreset, LayoutPresetConfig> = {
     textSize: 40,
     isOverlay: false,
   },
+  hero: {
+    id: 'hero',
+    name: '히어로 배너',
+    description: '큰 이미지 배경 + 좌측 그라데이션 + 큰 제목',
+    icon: '🦸',
+    preview: '▭⊡',
+    layoutType: 'overlay',
+    imageSize: 100,
+    textSize: 0,
+    isOverlay: true,
+    defaultTextPosition: {
+      x: 40,
+      y: 150,
+      width: 500,
+      height: 200,
+    },
+  },
+  minimal: {
+    id: 'minimal',
+    name: '미니멀',
+    description: '여백이 많고 깔끔한 스타일',
+    icon: '✨',
+    preview: '━\n▭',
+    layoutType: 'vertical',
+    imageSize: 50,
+    textSize: 50,
+    isOverlay: false,
+  },
+  quote: {
+    id: 'quote',
+    name: '인용문',
+    description: '좌측 이미지 + 우측 인용문 스타일 텍스트',
+    icon: '💬',
+    preview: '▭━',
+    layoutType: 'horizontal',
+    imageSize: 40,
+    textSize: 60,
+    isOverlay: false,
+  },
+  fullwidth: {
+    id: 'fullwidth',
+    name: '전체폭',
+    description: '전체 폭 이미지 + 플로팅 텍스트 박스',
+    icon: '🌅',
+    preview: '▭\n⊡',
+    layoutType: 'overlay',
+    imageSize: 100,
+    textSize: 0,
+    isOverlay: true,
+    defaultTextPosition: {
+      x: 24,
+      y: 400,
+      width: 600,
+      height: 100,
+    },
+  },
+  split: {
+    id: 'split',
+    name: '비대칭 분할',
+    description: '7:3 비율 비대칭 분할 레이아웃',
+    icon: '⬓',
+    preview: '▭━',
+    layoutType: 'horizontal',
+    imageSize: 70,
+    textSize: 30,
+    isOverlay: false,
+  },
 };
 
 // 프리셋 목록을 배열로 반환 (UI에서 사용)
@@ -162,7 +229,8 @@ export const getLayoutPresetConfig = (
   if (!presetId) {
     return LAYOUT_PRESETS.vertical; // 기본값
   }
-  return LAYOUT_PRESETS[presetId];
+  // 해당 프리셋이 없으면 기본값 반환
+  return LAYOUT_PRESETS[presetId] || LAYOUT_PRESETS.vertical;
 };
 
 // 프리셋 적용 시 자동으로 설정할 값들 반환

@@ -372,9 +372,16 @@ function ResultContent() {
           </button>
           <button
             onClick={() => router.push(`/detail-page/${projectId}`)}
-            className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+            className="bg-gray-400 hover:bg-gray-500 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
           >
-            상세페이지 편집 →
+            기존 편집기 →
+          </button>
+          <button
+            onClick={() => router.push(`/editor/${projectId}`)}
+            className="bg-violet-600 hover:bg-violet-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2"
+          >
+            <span>새 에디터</span>
+            <span className="bg-violet-400 text-xs px-2 py-0.5 rounded">NEW</span>
           </button>
         </div>
 

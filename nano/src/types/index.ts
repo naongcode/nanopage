@@ -59,7 +59,12 @@ export type LayoutPreset =
   | 'text-first'            // 텍스트 위 + 이미지 아래
   | 'image-dominant'        // 이미지 80% + 하단 작은 캡션
   | 'magazine'              // 이미지 60% 좌측 + 텍스트 40% 우측
-  | 'card';                 // 이미지 상단 (정사각형) + 텍스트 하단 (카드)
+  | 'card'                  // 이미지 상단 (정사각형) + 텍스트 하단 (카드)
+  | 'hero'                  // 히어로 배너 (큰 이미지 + 그라데이션 + 큰 제목)
+  | 'minimal'               // 미니멀 (여백 많고 깔끔)
+  | 'quote'                 // 인용문 스타일 (큰 따옴표)
+  | 'fullwidth'             // 전체 폭 이미지 + 플로팅 텍스트 박스
+  | 'split';                // 비대칭 분할 (7:3)
 
 // 시나리오 타입 정의
 export interface Scenario {
@@ -70,7 +75,9 @@ export interface Scenario {
   role: string;
   prompt_text: string;
   user_edited_prompt_text?: string | null;
-  description_text?: string;  // AI 생성 설명글
+  title_text?: string | null;  // 제목
+  subtitle_text?: string | null;  // 부제목
+  description_text?: string;  // AI 생성 설명글 (본문)
   user_edited_description_text?: string | null;  // 사용자 수정 설명글
   generated_image_urls?: string[];  // 생성된 모든 이미지들
   selected_image_url?: string | null;  // 현재 선택된 이미지
@@ -120,6 +127,8 @@ export interface UpdateScenarioRequest {
   image_type?: string;
   role?: string;
   user_edited_prompt_text?: string;
+  title_text?: string;  // 제목
+  subtitle_text?: string;  // 부제목
   user_edited_description_text?: string;
   layout_preset?: LayoutPreset | null;  // 레이아웃 프리셋
   text_position_x?: number;

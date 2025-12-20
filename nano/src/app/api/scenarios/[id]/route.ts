@@ -17,6 +17,8 @@ export async function PATCH(
     if (body.user_edited_prompt_text !== undefined) {
       updateData.user_edited_prompt_text = body.user_edited_prompt_text;
     }
+    if (body.title_text !== undefined) updateData.title_text = body.title_text;
+    if (body.subtitle_text !== undefined) updateData.subtitle_text = body.subtitle_text;
     if (body.user_edited_description_text !== undefined) {
       updateData.user_edited_description_text = body.user_edited_description_text;
     }
