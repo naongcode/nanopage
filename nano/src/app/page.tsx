@@ -107,11 +107,11 @@ export default function HomePage() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5">
             {projects.map((project) => (
               <div
                 key={project.id}
-                className="group bg-white rounded-lg shadow hover:shadow-xl transition-all p-2 cursor-pointer relative"
+                className="group bg-white rounded-lg shadow hover:shadow-lg transition-all p-1.5 cursor-pointer relative"
                 onClick={() => router.push(`/result?id=${project.id}`)}
               >
                 {/* 삭제 버튼 - 우측 상단 */}
@@ -120,7 +120,7 @@ export default function HomePage() {
                     e.stopPropagation();
                     handleDelete(project.id!);
                   }}
-                  className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white text-xs rounded-full transition-colors z-20 opacity-0 group-hover:opacity-100"
+                  className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white text-[10px] rounded-full transition-colors z-20 opacity-0 group-hover:opacity-100"
                   title="삭제"
                 >
                   ✕
@@ -128,7 +128,7 @@ export default function HomePage() {
 
                 {/* 제품 썸네일 */}
                 {project.product_images && project.product_images.length > 0 ? (
-                  <div className="w-full aspect-square bg-gray-100 rounded-lg overflow-hidden mb-2">
+                  <div className="w-full aspect-square bg-gray-100 rounded overflow-hidden mb-1.5">
                     <img
                       src={project.product_images[0]}
                       alt={project.project_name}
@@ -136,27 +136,24 @@ export default function HomePage() {
                     />
                   </div>
                 ) : (
-                  <div className="w-full aspect-square bg-gray-200 rounded-lg flex items-center justify-center text-3xl mb-2">
+                  <div className="w-full aspect-square bg-gray-200 rounded flex items-center justify-center text-2xl mb-1.5">
                     📦
                   </div>
                 )}
 
                 {/* 프로젝트 정보 */}
-                <h3 className="font-bold text-gray-900 truncate text-sm mb-1 pr-6">
-                  {project.project_name}
-                </h3>
-                <p className="text-xs text-gray-500 truncate mb-2">
-                  {project.category}
+                <p className="font-bold text-gray-900 truncate text-sm mb-1.5 pr-5">
+                  <span className="text-gray-500 font-normal">[{project.category}]</span> {project.project_name}
                 </p>
 
                 {/* 액션 버튼 */}
-                <div className="grid grid-cols-3 gap-1">
+                <div className="grid grid-cols-3 gap-0.5">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       router.push(`/edit?id=${project.id}`);
                     }}
-                    className="bg-green-500 hover:bg-green-600 text-white text-xs font-semibold py-1.5 px-1 rounded transition-colors"
+                    className="bg-green-500 hover:bg-green-600 text-white text-xs font-semibold py-1 px-0.5 rounded transition-colors"
                   >
                     입력
                   </button>
@@ -165,7 +162,7 @@ export default function HomePage() {
                       e.stopPropagation();
                       router.push(`/result?id=${project.id}`);
                     }}
-                    className="bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold py-1.5 px-1 rounded transition-colors"
+                    className="bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold py-1 px-0.5 rounded transition-colors"
                   >
                     시나리오
                   </button>
@@ -174,7 +171,7 @@ export default function HomePage() {
                       e.stopPropagation();
                       router.push(`/editor/${project.id}`);
                     }}
-                    className="bg-purple-500 hover:bg-purple-600 text-white text-xs font-semibold py-1.5 px-1 rounded transition-colors"
+                    className="bg-purple-500 hover:bg-purple-600 text-white text-xs font-semibold py-1 px-0.5 rounded transition-colors"
                   >
                     상세
                   </button>
