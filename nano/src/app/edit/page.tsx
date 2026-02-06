@@ -586,7 +586,7 @@ function EditContent() {
 
                 <FieldOptions
                   options={FIELD_OPTIONS.target_customer}
-                  onSelect={(value) => appendToField('target_customer', value)}
+                  onSelect={(value) => setFormData(prev => ({ ...prev, target_customer: value }))}
                   currentValue={formData.target_customer || ''}
                 />
               </div>
@@ -639,7 +639,7 @@ function EditContent() {
                 </h3>
                 <FieldOptions
                   options={FIELD_OPTIONS.differentiation_concept}
-                  onSelect={(value) => appendToField('differentiation_concept', value)}
+                  onSelect={(value) => setFormData(prev => ({ ...prev, differentiation_concept: value }))}
                   currentValue={formData.differentiation_concept || ''}
                 />
               </div>

@@ -23,6 +23,8 @@ const CONCEPT_CATEGORIES: { id: ConceptCategory; label: string; emoji: string }[
 export default function Home() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState('');
+  const [warnings, setWarnings] = useState<string[]>([]);
   const [productImages, setProductImages] = useState<File[]>([]);
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [selectedConceptCategory, setSelectedConceptCategory] = useState<ConceptCategory>('food');
@@ -74,6 +76,8 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setLoadingStep('');
+    setWarnings([]);
 
     try {
       let imageUrls: string[] = [];
@@ -105,14 +109,50 @@ export default function Home() {
         }),
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || '시나리오 생성에 실패했습니다.');
+      if (!response.body) {
+        throw new Error('스트리밍 응답을 받지 못했습니다.');
       }
 
-      const data = await response.json();
-      localStorage.setItem(`project_${data.project_id}`, JSON.stringify(data));
-      router.push(`/result?id=${data.project_id}`);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let result = null;
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.type === 'progress') {
+                setLoadingStep(data.step);
+              } else if (data.type === 'warning') {
+                setWarnings(prev => [...prev, data.message]);
+              } else if (data.type === 'complete') {
+                result = data.data;
+              } else if (data.type === 'error') {
+                throw new Error(data.message);
+              }
+            } catch (e) {
+              if (e instanceof SyntaxError) continue;
+              throw e;
+            }
+          }
+        }
+      }
+
+      if (result) {
+        localStorage.setItem(`project_${result.project_id}`, JSON.stringify(result));
+        router.push(`/result?id=${result.project_id}`);
+      } else {
+        throw new Error('시나리오 생성 결과를 받지 못했습니다.');
+      }
     } catch (error) {
       alert(error instanceof Error ? error.message : '오류가 발생했습니다.');
       setIsLoading(false);
@@ -279,12 +319,22 @@ export default function Home() {
                 </div>
               </section>
 
+              {isLoading && warnings.length > 0 && (
+                <div className="space-y-2">
+                  {warnings.map((warning, i) => (
+                    <div key={i} className="bg-orange-50 border border-orange-300 text-orange-800 text-sm px-4 py-2 rounded-lg">
+                      {warning}
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <button
                 type="submit"
                 disabled={isLoading}
                 className="w-full bg-yellow-400 hover:bg-yellow-500 disabled:bg-gray-300 text-gray-900 font-bold py-4 px-6 rounded-lg transition-colors duration-200 text-lg"
               >
-                {isLoading ? 'AI가 마케팅 컨셉과 시나리오를 생성하는 중...' : '마케팅 컨셉 자동 생성 + 15개 시나리오 생성 🚀'}
+                {isLoading ? (loadingStep || '준비 중...') : '마케팅 컨셉 자동 생성 + 15개 시나리오 생성 🚀'}
               </button>
             </form>
           </div>
@@ -332,7 +382,7 @@ export default function Home() {
 
                 <FieldOptions
                   options={FIELD_OPTIONS.target_customer}
-                  onSelect={(value) => appendToField('target_customer', value)}
+                  onSelect={(value) => setFormData(prev => ({ ...prev, target_customer: value }))}
                   currentValue={formData.target_customer}
                 />
               </div>
@@ -387,7 +437,7 @@ export default function Home() {
                 </h3>
                 <FieldOptions
                   options={FIELD_OPTIONS.differentiation_concept}
-                  onSelect={(value) => appendToField('differentiation_concept', value)}
+                  onSelect={(value) => setFormData(prev => ({ ...prev, differentiation_concept: value }))}
                   currentValue={formData.differentiation_concept}
                 />
               </div>

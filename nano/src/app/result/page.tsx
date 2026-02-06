@@ -21,6 +21,8 @@ function ResultContent() {
   const [generatingImageId, setGeneratingImageId] = useState<string | null>(null);
   const [regeneratingScenarioId, setRegeneratingScenarioId] = useState<string | null>(null);
   const [project, setProject] = useState<any>(null);
+  const [batchGenerating, setBatchGenerating] = useState(false);
+  const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0, success: 0, fail: 0 });
 
   useEffect(() => {
     if (!projectId) {
@@ -107,8 +109,13 @@ function ResultContent() {
       return;
     }
 
-    // 기존 이미지는 그대로 두고 새로 생성
-    await handleGenerateImage(scenario);
+    setGeneratingImageId(scenario.id);
+    const success = await generateSingleImage(scenario);
+    setGeneratingImageId(null);
+
+    if (!success) {
+      alert(`${scenario.scenario_no}번 이미지 생성에 실패했습니다.`);
+    }
   };
 
   const handleSelectImage = async (scenarioId: string, imageUrl: string) => {
@@ -136,49 +143,30 @@ function ResultContent() {
     }
   };
 
-  const handleGenerateImage = async (scenario: Scenario) => {
-    if (!scenario.id) return;
-
-    if (!confirm(`${scenario.scenario_no}번 시나리오의 이미지를 생성하시겠습니까? (약 10-30초 소요)`)) {
-      return;
-    }
-
-    console.log('🎨 [이미지 생성 시작]');
-    console.log('Scenario:', scenario);
-    console.log('Project:', project);
-
-    setGeneratingImageId(scenario.id);
+  const generateSingleImage = async (scenario: Scenario): Promise<boolean> => {
+    if (!scenario.id) return false;
 
     try {
-      const requestData = {
-        scenarioId: scenario.id,
-        projectId: projectId,
-        promptText: scenario.user_edited_prompt_text || scenario.prompt_text,
-        productImageUrl: project?.product_images?.[0],
-        imageType: scenario.image_type,
-        role: scenario.role,
-      };
-
-      console.log('📤 [요청 데이터]:', requestData);
-
       const response = await fetch('/api/generate-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestData),
+        body: JSON.stringify({
+          scenarioId: scenario.id,
+          projectId: projectId,
+          promptText: scenario.user_edited_prompt_text || scenario.prompt_text,
+          productImageUrls: project?.product_images || [],
+          imageType: scenario.image_type,
+          role: scenario.role,
+        }),
       });
-
-      console.log('📥 [응답 상태]:', response.status, response.statusText);
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('❌ [에러 응답]:', errorData);
-        throw new Error(errorData.error || '이미지 생성에 실패했습니다.');
+        throw new Error(errorData.error || '이미지 생성 실패');
       }
 
       const result = await response.json();
-      console.log('✅ [성공 응답]:', result);
 
-      // 로컬 상태 업데이트
       setScenarios((prev) =>
         prev.map((s) =>
           s.id === scenario.id
@@ -191,19 +179,70 @@ function ResultContent() {
         )
       );
 
-      alert('이미지가 성공적으로 생성되었습니다!');
+      return true;
     } catch (error) {
-      console.error('❌ [이미지 생성 오류]:', error);
-      alert(error instanceof Error ? error.message : '이미지 생성 중 오류가 발생했습니다.');
-    } finally {
-      setGeneratingImageId(null);
+      console.error(`❌ [${scenario.scenario_no}번 이미지 생성 오류]:`, error);
+      return false;
     }
+  };
+
+  const handleGenerateImage = async (scenario: Scenario) => {
+    if (!scenario.id) return;
+
+    if (!confirm(`${scenario.scenario_no}번 시나리오의 이미지를 생성하시겠습니까? (약 10-30초 소요)`)) {
+      return;
+    }
+
+    setGeneratingImageId(scenario.id);
+    const success = await generateSingleImage(scenario);
+    setGeneratingImageId(null);
+
+    if (!success) {
+      alert(`${scenario.scenario_no}번 이미지 생성에 실패했습니다.`);
+    }
+  };
+
+  const handleGenerateAllImages = async () => {
+    const activeScenarios = scenarios.filter((s) => !s.deleted_at && !s.generated_image_urls?.length);
+
+    if (activeScenarios.length === 0) {
+      alert('생성할 이미지가 없습니다. (이미 모두 생성되었거나 삭제된 시나리오입니다)');
+      return;
+    }
+
+    if (!confirm(`이미지가 없는 ${activeScenarios.length}개 시나리오의 이미지를 일괄 생성하시겠습니까?`)) {
+      return;
+    }
+
+    setBatchGenerating(true);
+    setBatchProgress({ current: 0, total: activeScenarios.length, success: 0, fail: 0 });
+
+    let success = 0;
+    let fail = 0;
+
+    for (const scenario of activeScenarios) {
+      setGeneratingImageId(scenario.id!);
+      const result = await generateSingleImage(scenario);
+
+      if (result) {
+        success++;
+      } else {
+        fail++;
+      }
+
+      setBatchProgress({ current: success + fail, total: activeScenarios.length, success, fail });
+    }
+
+    setGeneratingImageId(null);
+    setBatchGenerating(false);
+    alert(`일괄 생성 완료!\n성공: ${success}개 / 실패: ${fail}개`);
   };
 
 
   const handleEdit = (scenario: Scenario) => {
     setEditingId(scenario.id || null);
-    setEditedText(scenario.prompt_text);
+    // user_edited_prompt_text가 있으면 그것을 사용, 없으면 원본 prompt_text 사용
+    setEditedText(scenario.user_edited_prompt_text || scenario.prompt_text);
     setEditedImageType(scenario.image_type);
     setEditedRole(scenario.role);
   };
@@ -385,6 +424,33 @@ function ResultContent() {
           </button>
         </div>
 
+        {/* 일괄 이미지 생성 */}
+        <div className="mb-4 flex items-center gap-4">
+          <button
+            onClick={handleGenerateAllImages}
+            disabled={batchGenerating}
+            className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+          >
+            {batchGenerating
+              ? `이미지 생성 중... (${batchProgress.current}/${batchProgress.total})`
+              : '🎨 이미지 일괄 생성'}
+          </button>
+          {batchGenerating && (
+            <div className="flex items-center gap-3 text-sm">
+              <div className="w-48 bg-gray-200 rounded-full h-3">
+                <div
+                  className="bg-purple-600 h-3 rounded-full transition-all"
+                  style={{ width: `${batchProgress.total > 0 ? (batchProgress.current / batchProgress.total) * 100 : 0}%` }}
+                />
+              </div>
+              <span className="text-green-600 font-medium">성공 {batchProgress.success}</span>
+              {batchProgress.fail > 0 && (
+                <span className="text-red-600 font-medium">실패 {batchProgress.fail}</span>
+              )}
+            </div>
+          )}
+        </div>
+
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -460,7 +526,7 @@ function ResultContent() {
                           />
                         ) : (
                           <div className={isDeleted ? 'line-through text-gray-500' : 'space-y-1'}>
-                            {scenario.prompt_text.split('\n').map((line, i) => {
+                            {(scenario.user_edited_prompt_text || scenario.prompt_text).split('\n').map((line, i) => {
                               const trimmedLine = line.trim();
                               if (!trimmedLine) return null;
 

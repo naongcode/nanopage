@@ -62,15 +62,54 @@ export function LayoutBlock({
     />
   );
 
-  // 3단계 텍스트 컴포넌트
+  // 상세페이지용 텍스트 컴포넌트
   const TextContent = (
-    <div className="space-y-3">
-      {/* 제목 */}
+    <div className="flex flex-col gap-4">
+      {/* 부제목 - 캐치프레이즈 역할 */}
+      {editingField === 'subtitle' ? (
+        <input
+          type="text"
+          defaultValue={subtitle}
+          className="w-full py-1 text-xs tracking-widest uppercase border-b border-gray-200 focus:border-gray-400 outline-none bg-transparent"
+          style={{
+            fontFamily: effectiveStyle.textFontFamily,
+            color: effectiveStyle.textColor,
+            opacity: 0.5,
+            textAlign: effectiveStyle.textAlign,
+          }}
+          onBlur={(e) => {
+            onSubtitleEdit(e.target.value);
+            setEditingField(null);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              onSubtitleEdit(e.currentTarget.value);
+              setEditingField(null);
+            }
+          }}
+          autoFocus
+        />
+      ) : (
+        <p
+          onClick={() => setEditingField('subtitle')}
+          className="text-xs tracking-widest uppercase cursor-pointer hover:opacity-70 transition-opacity"
+          style={{
+            fontFamily: effectiveStyle.textFontFamily,
+            color: effectiveStyle.textColor,
+            opacity: 0.5,
+            textAlign: effectiveStyle.textAlign,
+          }}
+        >
+          {subtitle || 'SPECIAL EDITION'}
+        </p>
+      )}
+
+      {/* 제목 - 상품명/핵심 메시지 */}
       {editingField === 'title' ? (
         <input
           type="text"
           defaultValue={title}
-          className="w-full px-2 py-1 text-2xl font-bold border-b-2 border-gray-300 focus:border-gray-500 outline-none bg-transparent"
+          className="w-full py-1 text-3xl font-bold border-b-2 border-gray-400 focus:border-gray-600 outline-none bg-transparent"
           style={{
             fontFamily: effectiveStyle.textFontFamily,
             color: effectiveStyle.textColor,
@@ -91,62 +130,24 @@ export function LayoutBlock({
       ) : (
         <h2
           onClick={() => setEditingField('title')}
-          className="text-2xl font-bold cursor-pointer hover:opacity-70 transition-opacity"
+          className="text-3xl font-bold cursor-pointer hover:opacity-70 transition-opacity leading-tight"
           style={{
             fontFamily: effectiveStyle.textFontFamily,
             color: effectiveStyle.textColor,
             textAlign: effectiveStyle.textAlign,
-            lineHeight: '1.4',
+            wordBreak: 'keep-all',
           }}
         >
-          {title || '제목을 입력하세요'}
+          {title || '당신의 일상을 바꿀 단 하나의 선택'}
         </h2>
       )}
 
-      {/* 부제목 */}
-      {editingField === 'subtitle' ? (
-        <input
-          type="text"
-          defaultValue={subtitle}
-          className="w-full px-2 py-1 text-sm border-b border-gray-200 focus:border-gray-400 outline-none bg-transparent"
-          style={{
-            fontFamily: effectiveStyle.textFontFamily,
-            color: '#888',
-            textAlign: effectiveStyle.textAlign,
-          }}
-          onBlur={(e) => {
-            onSubtitleEdit(e.target.value);
-            setEditingField(null);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              onSubtitleEdit(e.currentTarget.value);
-              setEditingField(null);
-            }
-          }}
-          autoFocus
-        />
-      ) : (
-        <p
-          onClick={() => setEditingField('subtitle')}
-          className="text-sm cursor-pointer hover:opacity-70 transition-opacity"
-          style={{
-            fontFamily: effectiveStyle.textFontFamily,
-            color: '#888',
-            textAlign: effectiveStyle.textAlign,
-            lineHeight: '1.5',
-          }}
-        >
-          {subtitle || '부제목을 입력하세요'}
-        </p>
-      )}
-
-      {/* 본문 */}
+      {/* 본문 - 상품 설명 */}
       {editingField === 'description' ? (
         <textarea
           defaultValue={description}
           className="w-full p-2 border border-gray-200 rounded resize-none focus:ring-1 focus:ring-gray-300 outline-none"
-          rows={3}
+          rows={4}
           style={{
             fontFamily: effectiveStyle.textFontFamily,
             fontSize: `${effectiveStyle.textFontSize}px`,
@@ -162,17 +163,17 @@ export function LayoutBlock({
       ) : (
         <p
           onClick={() => setEditingField('description')}
-          className="cursor-pointer hover:opacity-70 transition-opacity whitespace-pre-line"
+          className="cursor-pointer hover:opacity-70 transition-opacity whitespace-pre-line leading-relaxed"
           style={{
             fontFamily: effectiveStyle.textFontFamily,
             fontSize: `${effectiveStyle.textFontSize}px`,
             color: effectiveStyle.textColor,
+            opacity: 0.75,
             textAlign: effectiveStyle.textAlign,
-            lineHeight: '1.8',
-            letterSpacing: '0.02em',
+            wordBreak: 'keep-all',
           }}
         >
-          {description || '본문을 입력하세요'}
+          {description || '완벽한 디테일과 프리미엄 소재로 완성된 제품입니다. 오랜 시간 연구 끝에 탄생한 이 제품은 당신의 라이프스타일에 특별함을 더해줄 것입니다.'}
         </p>
       )}
     </div>
@@ -228,12 +229,17 @@ export function LayoutBlock({
             );
           }}
           bounds="parent"
-          className="border border-dashed border-gray-400"
-          style={{ borderRadius: '4px' }}
+          className="border border-dashed border-gray-400/60"
+          style={{ borderRadius: '6px' }}
         >
           <div
-            className="h-full p-4"
-            style={{ backgroundColor: 'rgba(255,255,255,0.95)' }}
+            className="h-full"
+            style={{
+              backgroundColor: 'rgba(255,255,255,0.97)',
+              padding: '1.5rem 2rem',
+              borderRadius: '6px',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+            }}
           >
             {TextContent}
           </div>
@@ -244,68 +250,125 @@ export function LayoutBlock({
 
   // 세로형 레이아웃
   if (presetConfig.layoutType === 'vertical') {
+    // 텍스트 우선 - 강조 문구 먼저
     if (presetConfig.id === 'text-first') {
       return (
         <div className="w-full">
-          <div className="py-6 px-4">{TextContent}</div>
+          <div className="px-6 py-10 text-center max-w-2xl mx-auto">{TextContent}</div>
           <div className="w-full">{ImageContent}</div>
-        </div>
-      );
-    } else if (presetConfig.id === 'image-dominant') {
-      return (
-        <div className="w-full">
-          <div className="w-full">{ImageContent}</div>
-          <div className="py-3 px-4">{TextContent}</div>
-        </div>
-      );
-    } else if (presetConfig.id === 'card') {
-      return (
-        <div className="w-full">
-          <div className="aspect-square overflow-hidden">{ImageContent}</div>
-          <div className="py-6 px-4">{TextContent}</div>
-        </div>
-      );
-    } else {
-      return (
-        <div className="w-full">
-          <div className="w-full">{ImageContent}</div>
-          <div className="py-5 px-4">{TextContent}</div>
         </div>
       );
     }
+    // 이미지 중심 - 짧은 캡션만
+    if (presetConfig.id === 'image-dominant') {
+      return (
+        <div className="w-full">
+          <div className="w-full">{ImageContent}</div>
+          <div className="py-4 px-6 text-center">{TextContent}</div>
+        </div>
+      );
+    }
+    // 카드형 - 정사각 이미지 + 설명
+    if (presetConfig.id === 'card') {
+      return (
+        <div className="w-full">
+          <div className="aspect-square overflow-hidden">{ImageContent}</div>
+          <div className="py-8 px-8">{TextContent}</div>
+        </div>
+      );
+    }
+    // 미니멀 - 여백 많이
+    if (presetConfig.id === 'minimal') {
+      return (
+        <div className="w-full py-12">
+          <div className="px-10 mb-8 max-w-xl mx-auto text-center">{TextContent}</div>
+          <div className="w-full">{ImageContent}</div>
+        </div>
+      );
+    }
+    // 기본 세로형
+    return (
+      <div className="w-full">
+        <div className="w-full">{ImageContent}</div>
+        <div className="py-8 px-8">{TextContent}</div>
+      </div>
+    );
   }
 
   // 가로형 레이아웃
   if (presetConfig.layoutType === 'horizontal') {
-    const imageWidth = presetConfig.id === 'magazine' ? '55%' : '50%';
-    const textWidth = presetConfig.id === 'magazine' ? '45%' : '50%';
-
+    // magazine: 프리미엄 매거진 스타일
     if (presetConfig.id === 'magazine') {
       return (
-        <div className="flex items-stretch w-full" style={{ minHeight: '400px' }}>
-          <div style={{ width: imageWidth }}>{ImageContent}</div>
-          <div style={{ width: textWidth }} className="flex flex-col justify-center px-8 py-6">
+        <div className="flex items-stretch w-full" style={{ minHeight: '450px' }}>
+          <div className="flex-shrink-0 overflow-hidden" style={{ width: '58%' }}>{ImageContent}</div>
+          <div
+            className="flex flex-col justify-center bg-neutral-50"
+            style={{ width: '42%', padding: '3rem' }}
+          >
             {TextContent}
           </div>
         </div>
       );
     }
 
-    if (presetConfig.id === 'horizontal-right') {
+    // quote: 인용문/추천사 스타일
+    if (presetConfig.id === 'quote') {
       return (
-        <div className="flex items-center w-full gap-6">
-          <div style={{ width: textWidth }} className="px-4 py-6">{TextContent}</div>
-          <div style={{ width: imageWidth }}>{ImageContent}</div>
-        </div>
-      );
-    } else {
-      return (
-        <div className="flex items-center w-full gap-6">
-          <div style={{ width: imageWidth }}>{ImageContent}</div>
-          <div style={{ width: textWidth }} className="px-4 py-6">{TextContent}</div>
+        <div className="flex items-stretch w-full" style={{ minHeight: '380px' }}>
+          <div className="flex-shrink-0 overflow-hidden" style={{ width: '45%' }}>{ImageContent}</div>
+          <div
+            className="flex flex-col justify-center pl-10 pr-8 py-8"
+            style={{ width: '55%' }}
+          >
+            {TextContent}
+          </div>
         </div>
       );
     }
+
+    // split: 비대칭 분할
+    if (presetConfig.id === 'split') {
+      return (
+        <div className="flex items-stretch w-full" style={{ minHeight: '400px' }}>
+          <div className="flex-shrink-0 overflow-hidden" style={{ width: '62%' }}>{ImageContent}</div>
+          <div
+            className="flex flex-col justify-center bg-stone-100"
+            style={{ width: '38%', padding: '2.5rem' }}
+          >
+            {TextContent}
+          </div>
+        </div>
+      );
+    }
+
+    // horizontal-right: 텍스트 좌, 이미지 우
+    if (presetConfig.id === 'horizontal-right') {
+      return (
+        <div className="flex items-stretch w-full" style={{ minHeight: '400px' }}>
+          <div
+            className="flex flex-col justify-center pr-10 pl-8 py-8"
+            style={{ width: '45%' }}
+          >
+            {TextContent}
+          </div>
+          <div className="flex-shrink-0 overflow-hidden" style={{ width: '55%' }}>{ImageContent}</div>
+        </div>
+      );
+    }
+
+    // 기본 horizontal-left: 이미지 좌, 텍스트 우
+    return (
+      <div className="flex items-stretch w-full" style={{ minHeight: '400px' }}>
+        <div className="flex-shrink-0 overflow-hidden" style={{ width: '55%' }}>{ImageContent}</div>
+        <div
+          className="flex flex-col justify-center pl-10 pr-8 py-8"
+          style={{ width: '45%' }}
+        >
+          {TextContent}
+        </div>
+      </div>
+    );
   }
 
   // 멀티 이미지 레이아웃
@@ -359,56 +422,61 @@ export function LayoutBlock({
       </div>
     );
 
-    // triple-row: 3개 가로 나란히 + 하단 텍스트
+    // triple-row: 3개 가로 나란히 + 하단 텍스트 (상세컷 나열)
     if (presetConfig.id === 'triple-row') {
       return (
         <div className="w-full">
-          <div className="grid grid-cols-3 gap-2" style={{ minHeight: '250px' }}>
+          <div className="grid grid-cols-3 gap-px bg-gray-200" style={{ minHeight: '280px' }}>
             <ImageSlot index={0} imageUrl={allImages[0]} />
             <ImageSlot index={1} imageUrl={allImages[1]} />
             <ImageSlot index={2} imageUrl={allImages[2]} />
           </div>
-          <div className="py-5 px-4">{TextContent}</div>
+          <div className="py-8 px-8 text-center max-w-2xl mx-auto">{TextContent}</div>
         </div>
       );
     }
 
-    // triple-column: 3개 세로 + 우측 텍스트
+    // triple-column: 3개 세로 + 우측 텍스트 (상품 디테일)
     if (presetConfig.id === 'triple-column') {
       return (
-        <div className="flex w-full" style={{ minHeight: '500px' }}>
-          <div className="flex flex-col gap-2" style={{ width: '60%' }}>
-            <div style={{ height: '33.33%' }}>
+        <div className="flex w-full" style={{ minHeight: '520px' }}>
+          <div className="flex flex-col gap-px bg-gray-200" style={{ width: '50%' }}>
+            <div className="flex-1 bg-white">
               <ImageSlot index={0} imageUrl={allImages[0]} />
             </div>
-            <div style={{ height: '33.33%' }}>
+            <div className="flex-1 bg-white">
               <ImageSlot index={1} imageUrl={allImages[1]} />
             </div>
-            <div style={{ height: '33.33%' }}>
+            <div className="flex-1 bg-white">
               <ImageSlot index={2} imageUrl={allImages[2]} />
             </div>
           </div>
-          <div className="flex-1 px-6 py-4 flex flex-col justify-center">{TextContent}</div>
+          <div
+            className="flex flex-col justify-center bg-neutral-50"
+            style={{ width: '50%', padding: '3rem' }}
+          >
+            {TextContent}
+          </div>
         </div>
       );
     }
 
-    // triple-featured: 1개 큰 이미지 + 2개 작은 이미지
+    // triple-featured: 메인 + 서브 (대표 이미지 강조)
     if (presetConfig.id === 'triple-featured') {
       return (
         <div className="w-full">
-          <div className="grid grid-cols-2 gap-2" style={{ minHeight: '400px' }}>
-            <div className="row-span-2">
+          <div className="grid grid-cols-2 gap-px bg-gray-200" style={{ minHeight: '420px' }}>
+            <div className="row-span-2 bg-white">
               <ImageSlot index={0} imageUrl={allImages[0]} />
             </div>
-            <div>
+            <div className="bg-white">
               <ImageSlot index={1} imageUrl={allImages[1]} />
             </div>
-            <div>
+            <div className="bg-white">
               <ImageSlot index={2} imageUrl={allImages[2]} />
             </div>
           </div>
-          <div className="py-5 px-4">{TextContent}</div>
+          <div className="py-8 px-8">{TextContent}</div>
         </div>
       );
     }
@@ -454,12 +522,17 @@ export function LayoutBlock({
               );
             }}
             bounds="parent"
-            className="border border-dashed border-gray-400"
-            style={{ borderRadius: '4px' }}
+            className="border border-dashed border-gray-400/60"
+            style={{ borderRadius: '6px' }}
           >
             <div
-              className="h-full p-4"
-              style={{ backgroundColor: 'rgba(255,255,255,0.95)' }}
+              className="h-full"
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.97)',
+                padding: '1.5rem 2rem',
+                borderRadius: '6px',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+              }}
             >
               {TextContent}
             </div>
@@ -473,7 +546,7 @@ export function LayoutBlock({
   return (
     <div className="w-full">
       <div className="w-full">{ImageContent}</div>
-      <div className="py-5 px-4">{TextContent}</div>
+      <div className="py-8 px-8">{TextContent}</div>
     </div>
   );
 }

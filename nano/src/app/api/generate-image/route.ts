@@ -11,15 +11,23 @@ export async function POST(request: NextRequest) {
       projectId,
       promptText,
       productImageUrl,
+      productImageUrls,
       imageType,
       role,
     } = await request.json();
+
+    // 여러 이미지 배열 또는 단일 이미지 지원 (하위 호환)
+    const allProductImageUrls: string[] = productImageUrls?.length
+      ? productImageUrls
+      : productImageUrl
+        ? [productImageUrl]
+        : [];
 
     console.log('📋 [요청 데이터]:', {
       scenarioId,
       projectId,
       promptText: promptText?.substring(0, 100) + '...',
-      productImageUrl,
+      productImageCount: allProductImageUrls.length,
       imageType,
       role,
     });
@@ -36,17 +44,23 @@ export async function POST(request: NextRequest) {
     const contents: any[] = [];
 
     // 먼저 프롬프트 추가
-    const fullPrompt = productImageUrl
-      ? `You are provided with a product image (a necklace/jewelry). Create a professional product photography image using this EXACT product in the scenario described below.
+    const hasImages = allProductImageUrls.length > 0;
+    const imageRefText = allProductImageUrls.length > 1
+      ? `You are provided with ${allProductImageUrls.length} product reference images showing the product from different angles/states.`
+      : 'You are provided with a product reference image.';
 
-🚨 CRITICAL REQUIREMENT: You MUST use the provided product image in your generated image. Do not create a different product - use the EXACT product shown in the reference image and stage it according to the scenario.
+    const fullPrompt = hasImages
+      ? `${imageRefText} Create a professional product photography image using this EXACT product in the scenario described below.
+
+🚨 CRITICAL REQUIREMENT: You MUST use the provided product reference images to understand the product's appearance. Do not create a different product - use the EXACT product shown in the reference images and stage it according to the scenario.
 
 Image Type: ${imageType}
 Role: ${role}
 Scenario: ${promptText}
 
 Requirements:
-- Use the EXACT product shown in the reference image
+- Use the EXACT product shown in the reference images
+- Reference ALL provided images to understand the product's full appearance (shape, color, texture, packaging)
 - Stage and style the product according to the scenario description
 - Create a photorealistic, high-quality e-commerce product photography
 - Follow the exact scenario description for composition, props, and styling
@@ -68,26 +82,26 @@ Important:
     console.log('📝 [프롬프트 생성]:', fullPrompt.substring(0, 200) + '...');
 
     // 제품 이미지가 있으면 먼저 추가 (AI가 이미지를 먼저 보도록)
-    if (productImageUrl) {
-      console.log('🖼️ [제품 이미지] URL:', productImageUrl);
-      try {
-        const imageResponse = await fetch(productImageUrl);
-        console.log('📥 [이미지 다운로드] 상태:', imageResponse.status);
+    if (hasImages) {
+      console.log(`🖼️ [제품 이미지] ${allProductImageUrls.length}장 로드 중...`);
+      for (const imageUrl of allProductImageUrls) {
+        try {
+          const imageResponse = await fetch(imageUrl);
+          const imageBuffer = await imageResponse.arrayBuffer();
+          const base64Image = Buffer.from(imageBuffer).toString('base64');
 
-        const imageBuffer = await imageResponse.arrayBuffer();
-        const base64Image = Buffer.from(imageBuffer).toString('base64');
-        console.log('✅ [이미지 변환] Base64 길이:', base64Image.length);
-
-        contents.push({
-          inlineData: {
-            mimeType: 'image/jpeg',
-            data: base64Image,
-          },
-        });
-        console.log('📌 [이미지를 먼저 추가함] Contents 순서: 이미지 → 프롬프트');
-      } catch (error) {
-        console.error('❌ [이미지 로드 실패]:', error);
+          contents.push({
+            inlineData: {
+              mimeType: 'image/jpeg',
+              data: base64Image,
+            },
+          });
+          console.log(`✅ [이미지 추가] ${imageUrl.substring(imageUrl.lastIndexOf('/') + 1)}`);
+        } catch (error) {
+          console.error(`❌ [이미지 로드 실패] ${imageUrl}:`, error);
+        }
       }
+      console.log(`📌 [이미지 ${contents.length}장 추가 완료]`);
     } else {
       console.log('⚠️ [제품 이미지 없음]');
     }

@@ -3,24 +3,22 @@ import { CommonBlockSettings } from '@/types';
 export const DEFAULT_COMMON_SETTINGS: CommonBlockSettings = {
   blockWidth: 700,
   blockBackgroundColor: '#ffffff',
-  textFontFamily: '"Nanum Myeongjo", serif',
-  textFontSize: 20,
-  textColor: '#2d2d2d',
+  textFontFamily: 'Pretendard, -apple-system, sans-serif',
+  textFontSize: 16,
+  textColor: '#1a1a1a',
   textFontWeight: '400',
-  textAlign: 'center',
+  textAlign: 'left',
 };
 
 export const FONT_FAMILIES = [
-  { label: '나눔명조 (기본)', value: '"Nanum Myeongjo", serif' },
-  { label: '나눔고딕', value: '"Nanum Gothic", sans-serif' },
-  { label: 'Pretendard', value: 'Pretendard, sans-serif' },
+  { label: 'Pretendard (기본)', value: 'Pretendard, -apple-system, sans-serif' },
   { label: 'Noto Sans KR', value: '"Noto Sans KR", sans-serif' },
-  { label: 'Playfair Display (우아)', value: '"Playfair Display", serif' },
-  { label: 'Montserrat (세련)', value: '"Montserrat", sans-serif' },
-  { label: 'Raleway (모던)', value: '"Raleway", sans-serif' },
-  { label: 'Roboto (깔끔)', value: '"Roboto", sans-serif' },
-  { label: '기본 고딕체', value: 'sans-serif' },
-  { label: '기본 명조체', value: 'serif' },
+  { label: '나눔고딕', value: '"Nanum Gothic", sans-serif' },
+  { label: '나눔명조', value: '"Nanum Myeongjo", serif' },
+  { label: 'Spoqa Han Sans', value: '"Spoqa Han Sans Neo", sans-serif' },
+  { label: 'Wanted Sans', value: '"Wanted Sans", sans-serif' },
+  { label: 'Montserrat', value: '"Montserrat", sans-serif' },
+  { label: 'Playfair Display', value: '"Playfair Display", serif' },
 ];
 
 export const FONT_WEIGHTS = [

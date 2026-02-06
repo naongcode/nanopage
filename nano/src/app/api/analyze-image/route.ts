@@ -3,18 +3,29 @@ import { genAI } from '@/lib/gemini';
 
 export async function POST(request: NextRequest) {
   try {
-    const { imageData, mimeType } = await request.json();
+    const { imageData, mimeType, images } = await request.json();
 
-    if (!imageData) {
+    // 여러 이미지 배열 또는 단일 이미지 지원
+    const imageList: { data: string; mimeType: string }[] = images
+      ? images
+      : imageData
+        ? [{ data: imageData, mimeType: mimeType || 'image/jpeg' }]
+        : [];
+
+    if (imageList.length === 0) {
       return NextResponse.json(
         { error: '이미지 데이터가 필요합니다.' },
         { status: 400 }
       );
     }
 
+    const imageCountText = imageList.length > 1
+      ? `총 ${imageList.length}장의 제품 이미지가 제공됩니다. 모든 이미지를 종합적으로 분석하여`
+      : '이 제품 이미지를 분석하여';
+
     const prompt = `
 당신은 전문 제품 사진 분석가입니다.
-이 제품 이미지를 분석하여 다음 정보를 JSON 형식으로 추출해주세요:
+${imageCountText} 다음 정보를 JSON 형식으로 추출해주세요:
 
 {
   "colors": ["주요 색상 1", "주요 색상 2", "주요 색상 3"],
@@ -27,20 +38,23 @@ export async function POST(request: NextRequest) {
   "lighting_suggestion": "추천 조명 (예: 자연광, 스튜디오 조명, 황금빛 등)"
 }
 
+여러 이미지가 있다면 각 이미지에서 보이는 정보를 종합하여 하나의 결과로 통합해주세요.
 구체적이고 상세하게 분석해주세요.
 `;
 
-    const result = await genAI.models.generateContent({
-      model: 'gemini-2.0-flash-exp',
-      contents: [
-        { text: prompt },
-        {
-          inlineData: {
-            mimeType: mimeType || 'image/jpeg',
-            data: imageData,
-          },
+    const contents: any[] = [{ text: prompt }];
+    for (const img of imageList) {
+      contents.push({
+        inlineData: {
+          mimeType: img.mimeType || 'image/jpeg',
+          data: img.data,
         },
-      ],
+      });
+    }
+
+    const result = await genAI.models.generateContent({
+      model: 'gemini-2.0-flash',
+      contents,
     });
 
     if (!result.candidates || !result.candidates[0] || !result.candidates[0].content) {

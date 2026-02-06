@@ -65,6 +65,7 @@ export async function PUT(
     if (body.category !== undefined) updateData.category = body.category;
     if (body.differentiation_concept !== undefined) updateData.differentiation_concept = body.differentiation_concept;
     if (body.target_customer !== undefined) updateData.target_customer = body.target_customer;
+    if (body.shooting_concept !== undefined) updateData.shooting_concept = body.shooting_concept;
     if (body.selling_point_1 !== undefined) updateData.selling_point_1 = body.selling_point_1;
     if (body.selling_point_2 !== undefined) updateData.selling_point_2 = body.selling_point_2;
     if (body.selling_point_3 !== undefined) updateData.selling_point_3 = body.selling_point_3;
