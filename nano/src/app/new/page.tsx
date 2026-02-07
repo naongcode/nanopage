@@ -43,8 +43,8 @@ export default function Home() {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (files.length + productImages.length > 3) {
-      alert('최대 3장까지 업로드할 수 있습니다.');
+    if (files.length + productImages.length > 5) {
+      alert('최대 5장까지 업로드할 수 있습니다.');
       return;
     }
 
@@ -200,7 +200,7 @@ export default function Home() {
                   {/* 이미지 업로드 */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      제품 이미지 (선택사항, 최대 3장)
+                      제품 이미지 (선택사항, 최대 5장)
                     </label>
                     <div className="space-y-3">
                       <input

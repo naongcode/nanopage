@@ -107,8 +107,8 @@ function EditContent() {
     const files = Array.from(e.target.files || []);
     const totalImages = existingImageUrls.length + productImages.length + files.length;
 
-    if (totalImages > 3) {
-      alert('최대 3장까지 업로드할 수 있습니다.');
+    if (totalImages > 5) {
+      alert('최대 5장까지 업로드할 수 있습니다.');
       return;
     }
 
@@ -259,7 +259,7 @@ function EditContent() {
                   {/* 이미지 업로드 */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      제품 이미지 (선택사항, 최대 3장)
+                      제품 이미지 (선택사항, 최대 5장)
                     </label>
                     <div className="space-y-3">
                       {existingImageUrls.length > 0 && (

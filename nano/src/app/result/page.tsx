@@ -410,23 +410,6 @@ function ResultContent() {
             {showDeleted ? '🗑️ 삭제된 항목 숨기기' : '🗑️ 삭제된 항목 보기'}
           </button>
           <button
-            onClick={() => router.push(`/detail-page/${projectId}`)}
-            className="bg-gray-400 hover:bg-gray-500 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-          >
-            기존 편집기 →
-          </button>
-          <button
-            onClick={() => router.push(`/editor/${projectId}`)}
-            className="bg-violet-600 hover:bg-violet-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2"
-          >
-            <span>새 에디터</span>
-            <span className="bg-violet-400 text-xs px-2 py-0.5 rounded">NEW</span>
-          </button>
-        </div>
-
-        {/* 일괄 이미지 생성 */}
-        <div className="mb-4 flex items-center gap-4">
-          <button
             onClick={handleGenerateAllImages}
             disabled={batchGenerating}
             className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
@@ -449,6 +432,13 @@ function ResultContent() {
               )}
             </div>
           )}
+          <button
+            onClick={() => router.push(`/editor/${projectId}`)}
+            className="bg-violet-600 hover:bg-violet-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2"
+          >
+            <span>상세 편집하러가기</span>
+            <span>→</span>
+          </button>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -636,27 +626,27 @@ function ResultContent() {
                               onClick={() => handleEdit(scenario)}
                               className="w-full bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs font-semibold"
                             >
-                              ✏️ 수정
-                            </button>
-                            <button
-                              onClick={() => handleDelete(scenario.id!, scenario.scenario_no)}
-                              className="w-full bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-semibold"
-                            >
-                              🗑️ 삭제
+                              ✏️<br/>시나리오 수정
                             </button>
                             <button
                               onClick={() => handleRegenerateScenario(scenario.id!, scenario.scenario_no)}
                               disabled={regeneratingScenarioId === scenario.id}
-                              className="w-full bg-purple-500 hover:bg-purple-600 disabled:bg-gray-300 text-white px-2 py-1 rounded text-xs font-semibold mt-2"
+                              className="w-full bg-purple-500 hover:bg-purple-600 disabled:bg-gray-300 text-white px-2 py-1 rounded text-xs font-semibold"
                             >
-                              {regeneratingScenarioId === scenario.id ? '⏳...' : '🔄 시나리오'}
+                              {regeneratingScenarioId === scenario.id ? '⏳...' : <span>🔄<br/>시나리오 재생성</span>}
                             </button>
                             <button
                               onClick={() => handleRegenerateImage(scenario)}
                               disabled={generatingImageId === scenario.id}
                               className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white px-2 py-1 rounded text-xs font-semibold"
                             >
-                              {generatingImageId === scenario.id ? '⏳...' : '➕ 이미지'}
+                              {generatingImageId === scenario.id ? '⏳...' : <span>🖼️<br/>이미지 재생성</span>}
+                            </button>
+                            <button
+                              onClick={() => handleDelete(scenario.id!, scenario.scenario_no)}
+                              className="w-full bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-semibold"
+                            >
+                              🗑️<br/>블록삭제
                             </button>
                           </div>
                         )}

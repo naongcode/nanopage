@@ -106,6 +106,7 @@ function CanvasBlock({
   onAdditionalImageAdd,
   onAdditionalImageRemove,
   onImagesReorder,
+  onTextPositionChange,
 }: {
   scenario: Scenario;
   index: number;
@@ -118,11 +119,52 @@ function CanvasBlock({
   onAdditionalImageAdd?: (slotIndex: number, file: File) => void;
   onAdditionalImageRemove?: (slotIndex: number) => void;
   onImagesReorder?: (fromIndex: number, toIndex: number) => void;
+  onTextPositionChange?: (x: number, y: number) => void;
 }) {
   const [editingField, setEditingField] = useState<'title' | 'subtitle' | 'description' | null>(null);
   const [draggedSlot, setDraggedSlot] = useState<number | null>(null);
   const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);
+  const [isDraggingText, setIsDraggingText] = useState(false);
+  const [textOffset, setTextOffset] = useState({ x: scenario.text_position_x || 0, y: scenario.text_position_y || 0 });
+  const dragStartRef = useRef<{ mouseX: number; mouseY: number; startX: number; startY: number } | null>(null);
   const preset = scenario.layout_preset || 'vertical';
+
+  // 텍스트 드래그 핸들러
+  const textOffsetRef = useRef(textOffset);
+  textOffsetRef.current = textOffset;
+
+  const handleTextDragStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingText(true);
+    dragStartRef.current = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      startX: textOffset.x,
+      startY: textOffset.y,
+    };
+
+    const handleMouseMove = (ev: MouseEvent) => {
+      if (!dragStartRef.current) return;
+      const dx = ev.clientX - dragStartRef.current.mouseX;
+      const dy = ev.clientY - dragStartRef.current.mouseY;
+      const newX = dragStartRef.current.startX + dx;
+      const newY = dragStartRef.current.startY + dy;
+      setTextOffset({ x: newX, y: newY });
+      textOffsetRef.current = { x: newX, y: newY };
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingText(false);
+      onTextPositionChange?.(textOffsetRef.current.x, textOffsetRef.current.y);
+      dragStartRef.current = null;
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
 
   // 멀티 이미지 슬롯 렌더링
   const renderImageSlot = (slotIndex: number, isMain: boolean = false) => {
@@ -214,7 +256,42 @@ function CanvasBlock({
   const subtitle = scenario.subtitle_text || '';
   const description = scenario.user_edited_description_text || scenario.description_text || '';
 
+  // 드래그 핸들 아이콘
+  const DragHandle = (
+    <button
+      onMouseDown={handleTextDragStart}
+      className={`absolute -top-3 left-1/2 -translate-x-1/2 z-20 w-8 h-8 rounded-full bg-violet-500 hover:bg-violet-600 text-white flex items-center justify-center shadow-lg opacity-0 group-hover/text:opacity-100 transition-opacity ${isDraggingText ? '!opacity-100 bg-violet-700' : ''}`}
+      style={{ cursor: isDraggingText ? 'grabbing' : 'grab' }}
+      title="드래그하여 텍스트 이동"
+    >
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+      </svg>
+    </button>
+  );
+
   const TextContent = (
+    <div
+      className="relative group/text"
+      style={{
+        transform: `translate(${textOffset.x}px, ${textOffset.y}px)`,
+        transition: isDraggingText ? 'none' : 'transform 0.2s ease',
+      }}
+    >
+      {DragHandle}
+      {(textOffset.x !== 0 || textOffset.y !== 0) && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setTextOffset({ x: 0, y: 0 });
+            onTextPositionChange?.(0, 0);
+          }}
+          className="absolute -top-3 right-0 z-20 px-2 py-0.5 rounded bg-slate-500 hover:bg-slate-600 text-white text-xs opacity-0 group-hover/text:opacity-100 transition-opacity no-download"
+          title="위치 초기화"
+        >
+          초기화
+        </button>
+      )}
     <div className="space-y-2 p-4">
       {/* 제목 - 선택사항 */}
       {editingField === 'title' ? (
@@ -339,6 +416,7 @@ function CanvasBlock({
         </p>
       )}
     </div>
+    </div>
   );
 
   const ImageContent = (
@@ -360,18 +438,55 @@ function CanvasBlock({
   // 오버레이용 텍스트 색상 헬퍼
   const getOverlayTextColor = () => effectiveStyle.textColor !== '#333333' ? effectiveStyle.textColor : '#ffffff';
 
+  // 오버레이용 드래그 핸들 (밝은 배경 위)
+  const OverlayDragHandle = (
+    <button
+      onMouseDown={handleTextDragStart}
+      className={`absolute -top-3 left-1/2 -translate-x-1/2 z-20 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-violet-600 flex items-center justify-center shadow-lg opacity-0 group-hover/text:opacity-100 transition-opacity ${isDraggingText ? '!opacity-100 bg-white' : ''}`}
+      style={{ cursor: isDraggingText ? 'grabbing' : 'grab' }}
+      title="드래그하여 텍스트 이동"
+    >
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+      </svg>
+    </button>
+  );
+
+  const OverlayResetButton = (
+    <>
+      {(textOffset.x !== 0 || textOffset.y !== 0) && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setTextOffset({ x: 0, y: 0 });
+            onTextPositionChange?.(0, 0);
+          }}
+          className="absolute -top-3 right-0 z-20 px-2 py-0.5 rounded bg-white/70 hover:bg-white text-slate-700 text-xs opacity-0 group-hover/text:opacity-100 transition-opacity no-download"
+          title="위치 초기화"
+        >
+          초기화
+        </button>
+      )}
+    </>
+  );
+
   // 오버레이 텍스트 컴포넌트 (재사용)
   const OverlayTextContent = ({ position = 'center' }: { position?: 'top' | 'center' | 'bottom' }) => {
     const overlayTextColor = getOverlayTextColor();
     return (
       <div
-        className="absolute inset-x-0 px-8"
+        className="absolute inset-x-0 px-8 group/text"
         style={{
           top: position === 'top' ? '2rem' : position === 'center' ? '50%' : 'auto',
           bottom: position === 'bottom' ? '2rem' : 'auto',
-          transform: position === 'center' ? 'translateY(-50%)' : 'none',
+          transform: position === 'center'
+            ? `translateY(-50%) translate(${textOffset.x}px, ${textOffset.y}px)`
+            : `translate(${textOffset.x}px, ${textOffset.y}px)`,
+          transition: isDraggingText ? 'none' : 'transform 0.2s ease',
         }}
       >
+        {OverlayDragHandle}
+        {OverlayResetButton}
         <div
           className="space-y-3"
           style={{
@@ -597,11 +712,15 @@ function CanvasBlock({
           <div className="relative">
             {ImageContent}
             <div
-              className="absolute bottom-0 left-0 right-0 py-4 px-6"
+              className="absolute bottom-0 left-0 right-0 py-4 px-6 group/text"
               style={{
                 background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)',
+                transform: `translate(${textOffset.x}px, ${textOffset.y}px)`,
+                transition: isDraggingText ? 'none' : 'transform 0.2s ease',
               }}
             >
+              {OverlayDragHandle}
+              {OverlayResetButton}
               <p
                 onClick={(e) => { e.stopPropagation(); setEditingField('title'); }}
                 className="text-white text-center cursor-text hover:opacity-80 transition text-lg font-medium"
@@ -634,7 +753,15 @@ function CanvasBlock({
               className="absolute inset-0 w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
-            <div className="absolute inset-0 flex items-center">
+            <div
+              className="absolute inset-0 flex items-center group/text"
+              style={{
+                transform: `translate(${textOffset.x}px, ${textOffset.y}px)`,
+                transition: isDraggingText ? 'none' : 'transform 0.2s ease',
+              }}
+            >
+              {OverlayDragHandle}
+              {OverlayResetButton}
               <div className="w-full px-10 py-12 space-y-5" style={{ fontFamily: effectiveStyle.textFontFamily, textAlign: effectiveStyle.textAlign }}>
                 {editingField === 'title' ? (
                   <input
@@ -752,7 +879,21 @@ function CanvasBlock({
                 className="absolute inset-0 w-full h-full object-cover"
               />
             </div>
-            <div className="w-3/5 flex flex-col justify-center p-10 relative">
+            <div className="w-3/5 flex flex-col justify-center p-10 relative group/text">
+              {DragHandle}
+              {(textOffset.x !== 0 || textOffset.y !== 0) && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setTextOffset({ x: 0, y: 0 });
+                    onTextPositionChange?.(0, 0);
+                  }}
+                  className="absolute -top-3 right-0 z-20 px-2 py-0.5 rounded bg-slate-500 hover:bg-slate-600 text-white text-xs opacity-0 group-hover/text:opacity-100 transition-opacity no-download"
+                  title="위치 초기화"
+                >
+                  초기화
+                </button>
+              )}
               {/* 큰 따옴표 */}
               <div
                 className="absolute top-6 left-6 text-8xl opacity-10 font-serif leading-none select-none"
@@ -760,7 +901,13 @@ function CanvasBlock({
               >
                 "
               </div>
-              <div className="relative z-10 pl-8">
+              <div
+                className="relative z-10 pl-8"
+                style={{
+                  transform: `translate(${textOffset.x}px, ${textOffset.y}px)`,
+                  transition: isDraggingText ? 'none' : 'transform 0.2s ease',
+                }}
+              >
                 {editingField === 'description' ? (
                   <textarea
                     defaultValue={description}
@@ -848,9 +995,15 @@ function CanvasBlock({
           <div className="relative">
             {ImageContent}
             <div
-              className="absolute bottom-6 left-6 right-6 p-6 rounded-xl backdrop-blur-md"
-              style={{ background: 'rgba(255,255,255,0.9)' }}
+              className="absolute bottom-6 left-6 right-6 p-6 rounded-xl backdrop-blur-md group/text"
+              style={{
+                background: 'rgba(255,255,255,0.9)',
+                transform: `translate(${textOffset.x}px, ${textOffset.y}px)`,
+                transition: isDraggingText ? 'none' : 'transform 0.2s ease',
+              }}
             >
+              {OverlayDragHandle}
+              {OverlayResetButton}
               <div className="flex items-center gap-6">
                 <div className="flex-1">
                   {editingField === 'title' ? (
@@ -907,10 +1060,30 @@ function CanvasBlock({
               />
             </div>
             <div
-              className="w-[30%] flex flex-col justify-center p-6"
+              className="w-[30%] flex flex-col justify-center p-6 relative"
               style={{ background: effectiveStyle.blockBackgroundColor }}
             >
-              <div className="space-y-4">
+              <div
+                className="space-y-4 relative group/text"
+                style={{
+                  transform: `translate(${textOffset.x}px, ${textOffset.y}px)`,
+                  transition: isDraggingText ? 'none' : 'transform 0.2s ease',
+                }}
+              >
+                {DragHandle}
+                {(textOffset.x !== 0 || textOffset.y !== 0) && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTextOffset({ x: 0, y: 0 });
+                      onTextPositionChange?.(0, 0);
+                    }}
+                    className="absolute -top-3 right-0 z-20 px-2 py-0.5 rounded bg-slate-500 hover:bg-slate-600 text-white text-xs opacity-0 group-hover/text:opacity-100 transition-opacity no-download"
+                    title="위치 초기화"
+                  >
+                    초기화
+                  </button>
+                )}
                 {editingField === 'title' ? (
                   <input
                     type="text"
@@ -1683,6 +1856,22 @@ export default function EditorPage() {
     }
   };
 
+  // 텍스트 위치 변경
+  const handleTextPositionChange = async (scenarioId: string, x: number, y: number) => {
+    try {
+      await fetch(`/api/scenarios/${scenarioId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text_position_x: x, text_position_y: y }),
+      });
+      setScenarios((prev) =>
+        prev.map((s) => (s.id === scenarioId ? { ...s, text_position_x: x, text_position_y: y } : s))
+      );
+    } catch (error) {
+      console.error('Error saving text position:', error);
+    }
+  };
+
   // 텍스트 수정
   const handleTitleEdit = async (scenarioId: string, text: string) => {
     try {
@@ -2106,6 +2295,7 @@ export default function EditorPage() {
                     onAdditionalImageAdd={(slotIndex, file) => handleAdditionalImageAdd(scenario.id!, slotIndex, file)}
                     onAdditionalImageRemove={(slotIndex) => handleAdditionalImageRemove(scenario.id!, slotIndex)}
                     onImagesReorder={(from, to) => handleImagesReorder(scenario.id!, from, to)}
+                    onTextPositionChange={(x, y) => handleTextPositionChange(scenario.id!, x, y)}
                   />
                 </div>
               ))}

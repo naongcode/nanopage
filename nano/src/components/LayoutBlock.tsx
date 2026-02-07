@@ -212,6 +212,7 @@ export function LayoutBlock({
             width: scenario.text_width || presetConfig.defaultTextPosition?.width || 600,
             height: scenario.text_height || presetConfig.defaultTextPosition?.height || 'auto',
           }}
+          dragHandleClassName="drag-handle"
           onDragStop={(e, d) => {
             onTextPositionChange(
               d.x,
@@ -233,7 +234,7 @@ export function LayoutBlock({
           style={{ borderRadius: '6px' }}
         >
           <div
-            className="h-full"
+            className="h-full relative"
             style={{
               backgroundColor: 'rgba(255,255,255,0.97)',
               padding: '1.5rem 2rem',
@@ -241,6 +242,13 @@ export function LayoutBlock({
               boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
             }}
           >
+            <div className="drag-handle absolute top-1 right-1 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 z-10" title="드래그하여 이동">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <circle cx="5" cy="3" r="1.5" /><circle cx="11" cy="3" r="1.5" />
+                <circle cx="5" cy="8" r="1.5" /><circle cx="11" cy="8" r="1.5" />
+                <circle cx="5" cy="13" r="1.5" /><circle cx="11" cy="13" r="1.5" />
+              </svg>
+            </div>
             {TextContent}
           </div>
         </Rnd>
