@@ -163,7 +163,8 @@ export async function POST(request: NextRequest) {
             const images = await Promise.all(imagePromises);
 
             for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-              const analysisResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/analyze-image`, {
+              const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+              const analysisResponse = await fetch(`${baseUrl}/api/analyze-image`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ images }),
