@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { CreateProjectRequest, Scenario } from '@/types';
 import { supabase } from '@/lib/supabase';
+import { genAI } from '@/lib/gemini';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -162,25 +163,61 @@ export async function POST(request: NextRequest) {
             });
             const images = await Promise.all(imagePromises);
 
-            for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-              const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
-              const analysisResponse = await fetch(`${baseUrl}/api/analyze-image`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ images }),
+            const imageCountText = images.length > 1
+              ? `총 ${images.length}장의 제품 이미지가 제공됩니다. 모든 이미지를 종합적으로 분석하여`
+              : '이 제품 이미지를 분석하여';
+
+            const analysisPrompt = `
+당신은 전문 제품 사진 분석가입니다.
+${imageCountText} 다음 정보를 JSON 형식으로 추출해주세요:
+
+{
+  "colors": ["주요 색상 1", "주요 색상 2", "주요 색상 3"],
+  "material": "제품의 재질",
+  "texture": "표면 질감",
+  "style": "디자인 스타일",
+  "shape": "형태 및 실루엣 설명",
+  "key_features": ["특징 1", "특징 2", "특징 3"],
+  "suggested_mood": "추천 촬영 분위기",
+  "lighting_suggestion": "추천 조명"
+}
+
+여러 이미지가 있다면 각 이미지에서 보이는 정보를 종합하여 하나의 결과로 통합해주세요.
+구체적이고 상세하게 분석해주세요.
+`;
+
+            const contents: any[] = [{ text: analysisPrompt }];
+            for (const img of images) {
+              contents.push({
+                inlineData: {
+                  mimeType: img.mimeType,
+                  data: img.data,
+                },
               });
+            }
 
-              if (analysisResponse.ok) {
-                const analysisData = await analysisResponse.json();
-                imageAnalysis = analysisData.analysis;
+            for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+              try {
+                const result = await genAI.models.generateContent({
+                  model: 'gemini-2.0-flash',
+                  contents,
+                });
+
+                const text = result.candidates?.[0]?.content?.parts?.find((part: any) => part.text)?.text;
+                if (!text) throw new Error('분석 결과를 받지 못했습니다.');
+
+                const jsonMatch = text.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) throw new Error('분석 결과를 파싱할 수 없습니다.');
+
+                imageAnalysis = JSON.parse(jsonMatch[0]);
                 break;
-              }
-
-              if (attempt < MAX_RETRIES) {
-                sendEvent({ type: 'progress', step: `[${currentStep}/${totalSteps}] API 한도 초과 - ${RETRY_DELAY / 1000}초 후 재시도... (${attempt}/${MAX_RETRIES})` });
-                await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-              } else {
-                throw new Error('이미지 분석에 실패했습니다. 잠시 후 다시 시도해주세요. (API 호출 한도 초과)');
+              } catch (e) {
+                if (attempt < MAX_RETRIES) {
+                  sendEvent({ type: 'progress', step: `[${currentStep}/${totalSteps}] API 한도 초과 - ${RETRY_DELAY / 1000}초 후 재시도... (${attempt}/${MAX_RETRIES})` });
+                  await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+                } else {
+                  throw new Error('이미지 분석에 실패했습니다. 잠시 후 다시 시도해주세요. (API 호출 한도 초과)');
+                }
               }
             }
           } catch (error) {
