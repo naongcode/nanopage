@@ -101,3 +101,42 @@ export async function PUT(
     );
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    // 1. Storage에서 프로젝트 폴더 전체 삭제 ({projectId}/uploads/, {projectId}/generated/)
+    for (const subFolder of ['uploads', 'generated']) {
+      const { data: files } = await supabase.storage
+        .from('product-images')
+        .list(`${id}/${subFolder}`);
+
+      if (files && files.length > 0) {
+        const filePaths = files.map((f) => `${id}/${subFolder}/${f.name}`);
+        await supabase.storage.from('product-images').remove(filePaths);
+      }
+    }
+
+    // 2. DB에서 프로젝트 삭제 (시나리오는 ON DELETE CASCADE로 자동 삭제)
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw new Error(`프로젝트 삭제 실패: ${error.message}`);
+    }
+
+    return NextResponse.json({ message: '프로젝트가 삭제되었습니다.' });
+  } catch (error) {
+    console.error('Error deleting project:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : '프로젝트 삭제 중 오류가 발생했습니다.' },
+      { status: 500 }
+    );
+  }
+}

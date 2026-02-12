@@ -34,12 +34,11 @@ export default function HomePage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('정말 삭제하시겠습니까?')) return;
+    if (!confirm('정말 삭제하시겠습니까? 모든 이미지도 함께 삭제됩니다.')) return;
 
     try {
-      const { error } = await supabase.from('projects').delete().eq('id', id);
-
-      if (error) throw error;
+      const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('삭제 실패');
 
       setProjects((prev) => prev.filter((p) => p.id !== id));
       alert('삭제되었습니다.');
