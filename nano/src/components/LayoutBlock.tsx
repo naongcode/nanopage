@@ -64,7 +64,7 @@ export function LayoutBlock({
 
   // 상세페이지용 텍스트 컴포넌트
   const TextContent = (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" style={{ fontWeight: effectiveStyle.textFontWeight }}>
       {/* 부제목 - 캐치프레이즈 역할 */}
       {editingField === 'subtitle' ? (
         <input

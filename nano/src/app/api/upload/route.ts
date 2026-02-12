@@ -10,8 +10,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '이미지가 없습니다.' }, { status: 400 });
     }
 
-    if (images.length > 3) {
-      return NextResponse.json({ error: '최대 3장까지 업로드할 수 있습니다.' }, { status: 400 });
+    if (images.length > 5) {
+      return NextResponse.json({ error: '최대 5장까지 업로드할 수 있습니다.' }, { status: 400 });
     }
 
     const uploadedUrls: string[] = [];

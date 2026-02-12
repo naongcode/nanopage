@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Scenario, Project, CommonBlockSettings, ImageCrop, LayoutPreset } from '@/types';
-import { DEFAULT_COMMON_SETTINGS } from '@/lib/block-settings-defaults';
+import { DEFAULT_COMMON_SETTINGS, FONT_FAMILIES as SHARED_FONT_FAMILIES, FONT_WEIGHTS as SHARED_FONT_WEIGHTS } from '@/lib/block-settings-defaults';
 import {
   DndContext,
   closestCenter,
@@ -270,6 +270,10 @@ function CanvasBlock({
     </button>
   );
 
+  const fs = effectiveStyle.textFontSize;
+  const titleSize = Math.round(fs * 1.4);
+  const subtitleSize = Math.round(fs * 0.8);
+
   const TextContent = (
     <div
       className="relative group/text"
@@ -292,15 +296,16 @@ function CanvasBlock({
           초기화
         </button>
       )}
-    <div className="space-y-2 p-4">
+    <div className="space-y-2 p-4" style={{ fontWeight: effectiveStyle.textFontWeight }}>
       {/* 제목 - 선택사항 */}
       {editingField === 'title' ? (
         <input
           type="text"
           defaultValue={title}
           placeholder="제목 (선택사항)"
-          className="w-full px-2 py-1 text-xl font-bold border-b-2 border-violet-400 outline-none bg-transparent"
+          className="w-full px-2 py-1 font-bold border-b-2 border-violet-400 outline-none bg-transparent"
           style={{
+            fontSize: `${titleSize}px`,
             fontFamily: effectiveStyle.textFontFamily,
             color: effectiveStyle.textColor,
             textAlign: effectiveStyle.textAlign,
@@ -320,8 +325,9 @@ function CanvasBlock({
       ) : title ? (
         <h3
           onClick={(e) => { e.stopPropagation(); setEditingField('title'); }}
-          className="text-xl font-bold cursor-text hover:bg-black/5 rounded px-1 -mx-1 transition"
+          className="font-bold cursor-text hover:bg-black/5 rounded px-1 -mx-1 transition"
           style={{
+            fontSize: `${titleSize}px`,
             fontFamily: effectiveStyle.textFontFamily,
             color: effectiveStyle.textColor,
             textAlign: effectiveStyle.textAlign,
@@ -343,8 +349,9 @@ function CanvasBlock({
         <input
           type="text"
           defaultValue={subtitle}
-          className="w-full px-2 py-1 text-sm border-b border-violet-300 outline-none bg-transparent"
+          className="w-full px-2 py-1 border-b border-violet-300 outline-none bg-transparent"
           style={{
+            fontSize: `${subtitleSize}px`,
             fontFamily: effectiveStyle.textFontFamily,
             color: '#888',
             textAlign: effectiveStyle.textAlign,
@@ -365,8 +372,9 @@ function CanvasBlock({
       ) : subtitle ? (
         <p
           onClick={(e) => { e.stopPropagation(); setEditingField('subtitle'); }}
-          className="text-sm cursor-text hover:bg-black/5 rounded px-1 -mx-1 transition"
+          className="cursor-text hover:bg-black/5 rounded px-1 -mx-1 transition"
           style={{
+            fontSize: `${subtitleSize}px`,
             fontFamily: effectiveStyle.textFontFamily,
             color: '#888',
             textAlign: effectiveStyle.textAlign,
@@ -490,9 +498,10 @@ function CanvasBlock({
         <div
           className="space-y-3"
           style={{
-            textShadow: '0 2px 8px rgba(0,0,0,0.6)',
+            textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7), 0 0 20px rgba(0,0,0,0.4)',
             textAlign: effectiveStyle.textAlign,
             fontFamily: effectiveStyle.textFontFamily,
+            fontWeight: effectiveStyle.textFontWeight,
           }}
         >
           {editingField === 'title' ? (
@@ -500,8 +509,8 @@ function CanvasBlock({
               type="text"
               defaultValue={title}
               placeholder="제목 (선택사항)"
-              className="w-full px-3 py-2 text-3xl font-bold border-b-2 border-white/50 outline-none bg-black/30 rounded-lg backdrop-blur-sm"
-              style={{ color: overlayTextColor, fontFamily: effectiveStyle.textFontFamily, textAlign: effectiveStyle.textAlign }}
+              className="w-full px-3 py-2 font-bold border-b-2 border-white/50 outline-none bg-black/30 rounded-lg backdrop-blur-sm"
+              style={{ fontSize: `${titleSize}px`, color: overlayTextColor, fontFamily: effectiveStyle.textFontFamily, textAlign: effectiveStyle.textAlign }}
               onBlur={(e) => { onTitleChange(e.target.value); setEditingField(null); }}
               onKeyDown={(e) => { if (e.key === 'Enter') { onTitleChange(e.currentTarget.value); setEditingField(null); }}}
               autoFocus
@@ -509,8 +518,8 @@ function CanvasBlock({
           ) : title ? (
             <h3
               onClick={(e) => { e.stopPropagation(); setEditingField('title'); }}
-              className="w-full text-3xl md:text-4xl font-bold cursor-text hover:opacity-80 transition leading-tight"
-              style={{ color: overlayTextColor, textAlign: effectiveStyle.textAlign }}
+              className="w-full font-bold cursor-text hover:opacity-80 transition leading-tight"
+              style={{ fontSize: `${titleSize}px`, color: overlayTextColor, textAlign: effectiveStyle.textAlign }}
             >
               {title}
             </h3>
@@ -530,8 +539,8 @@ function CanvasBlock({
               type="text"
               defaultValue={subtitle}
               placeholder="부제목 (선택사항)"
-              className="w-full px-3 py-1 text-lg border-b border-white/30 outline-none bg-black/30 rounded-lg backdrop-blur-sm"
-              style={{ color: overlayTextColor, opacity: 0.9, fontFamily: effectiveStyle.textFontFamily, textAlign: effectiveStyle.textAlign }}
+              className="w-full px-3 py-1 border-b border-white/30 outline-none bg-black/30 rounded-lg backdrop-blur-sm"
+              style={{ fontSize: `${subtitleSize}px`, color: overlayTextColor, opacity: 0.9, fontFamily: effectiveStyle.textFontFamily, textAlign: effectiveStyle.textAlign }}
               onBlur={(e) => { onSubtitleChange(e.target.value); setEditingField(null); }}
               onKeyDown={(e) => { if (e.key === 'Enter') { onSubtitleChange(e.currentTarget.value); setEditingField(null); }}}
               autoFocus
@@ -539,8 +548,8 @@ function CanvasBlock({
           ) : subtitle ? (
             <p
               onClick={(e) => { e.stopPropagation(); setEditingField('subtitle'); }}
-              className="w-full text-lg md:text-xl cursor-text hover:opacity-80 transition"
-              style={{ color: overlayTextColor, opacity: 0.9, textAlign: effectiveStyle.textAlign }}
+              className="w-full cursor-text hover:opacity-80 transition"
+              style={{ fontSize: `${subtitleSize}px`, color: overlayTextColor, opacity: 0.9, textAlign: effectiveStyle.textAlign }}
             >
               {subtitle}
             </p>
@@ -723,8 +732,8 @@ function CanvasBlock({
               {OverlayResetButton}
               <p
                 onClick={(e) => { e.stopPropagation(); setEditingField('title'); }}
-                className="text-white text-center cursor-text hover:opacity-80 transition text-lg font-medium"
-                style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)', fontFamily: effectiveStyle.textFontFamily }}
+                className="text-white text-center cursor-text hover:opacity-80 transition font-medium"
+                style={{ fontSize: `${fs}px`, textShadow: '0 1px 3px rgba(0,0,0,0.5)', fontFamily: effectiveStyle.textFontFamily }}
               >
                 {editingField === 'title' ? (
                   <input
@@ -762,22 +771,22 @@ function CanvasBlock({
             >
               {OverlayDragHandle}
               {OverlayResetButton}
-              <div className="w-full px-10 py-12 space-y-5" style={{ fontFamily: effectiveStyle.textFontFamily, textAlign: effectiveStyle.textAlign }}>
+              <div className="w-full px-10 py-12 space-y-5" style={{ fontFamily: effectiveStyle.textFontFamily, textAlign: effectiveStyle.textAlign, fontWeight: effectiveStyle.textFontWeight, textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7), 0 0 20px rgba(0,0,0,0.4)' }}>
                 {editingField === 'title' ? (
                   <input
                     type="text"
                     defaultValue={title}
                     placeholder="제목 (선택사항)"
-                    className="w-full text-5xl font-black bg-transparent border-b-2 border-white/50 outline-none text-white"
-                    style={{ textShadow: '0 4px 12px rgba(0,0,0,0.5)', textAlign: effectiveStyle.textAlign }}
+                    className="w-full font-black bg-transparent border-b-2 border-white/50 outline-none text-white"
+                    style={{ fontSize: `${Math.round(titleSize * 1.5)}px`, textShadow: '0 4px 12px rgba(0,0,0,0.5)', textAlign: effectiveStyle.textAlign }}
                     onBlur={(e) => { onTitleChange(e.target.value); setEditingField(null); }}
                     autoFocus
                   />
                 ) : title ? (
                   <h2
                     onClick={(e) => { e.stopPropagation(); setEditingField('title'); }}
-                    className="w-full text-4xl md:text-5xl lg:text-6xl font-black text-white cursor-text hover:opacity-80 transition"
-                    style={{ textShadow: '0 4px 12px rgba(0,0,0,0.5)', lineHeight: '1.1', textAlign: effectiveStyle.textAlign }}
+                    className="w-full font-black text-white cursor-text hover:opacity-80 transition"
+                    style={{ fontSize: `${Math.round(titleSize * 1.5)}px`, textShadow: '0 4px 12px rgba(0,0,0,0.5)', lineHeight: '1.1', textAlign: effectiveStyle.textAlign }}
                   >
                     {title}
                   </h2>
@@ -796,16 +805,16 @@ function CanvasBlock({
                     type="text"
                     defaultValue={subtitle}
                     placeholder="부제목"
-                    className="w-full text-xl bg-transparent border-b border-white/30 outline-none text-white/90"
-                    style={{ textAlign: effectiveStyle.textAlign }}
+                    className="w-full bg-transparent border-b border-white/30 outline-none text-white/90"
+                    style={{ fontSize: `${subtitleSize}px`, textAlign: effectiveStyle.textAlign }}
                     onBlur={(e) => { onSubtitleChange(e.target.value); setEditingField(null); }}
                     autoFocus
                   />
                 ) : subtitle ? (
                   <p
                     onClick={(e) => { e.stopPropagation(); setEditingField('subtitle'); }}
-                    className="w-full text-xl md:text-2xl text-white/90 cursor-text hover:opacity-80"
-                    style={{ textAlign: effectiveStyle.textAlign }}
+                    className="w-full text-white/90 cursor-text hover:opacity-80"
+                    style={{ fontSize: `${subtitleSize}px`, textAlign: effectiveStyle.textAlign }}
                   >
                     {subtitle}
                   </p>
@@ -824,16 +833,16 @@ function CanvasBlock({
                     defaultValue={description}
                     placeholder="본문"
                     rows={2}
-                    className="w-full text-lg bg-transparent border border-white/30 rounded outline-none text-white/80 p-2 resize-none"
-                    style={{ textAlign: effectiveStyle.textAlign }}
+                    className="w-full bg-transparent border border-white/30 rounded outline-none text-white/80 p-2 resize-none"
+                    style={{ fontSize: `${fs}px`, textAlign: effectiveStyle.textAlign }}
                     onBlur={(e) => { onDescriptionChange(e.target.value); setEditingField(null); }}
                     autoFocus
                   />
                 ) : description ? (
                   <p
                     onClick={(e) => { e.stopPropagation(); setEditingField('description'); }}
-                    className="w-full text-lg text-white/80 cursor-text hover:opacity-80 leading-relaxed"
-                    style={{ textAlign: effectiveStyle.textAlign }}
+                    className="w-full text-white/80 cursor-text hover:opacity-80 leading-relaxed whitespace-pre-line"
+                    style={{ fontSize: `${fs}px`, textAlign: effectiveStyle.textAlign }}
                   >
                     {description}
                   </p>
@@ -911,8 +920,8 @@ function CanvasBlock({
                 {editingField === 'description' ? (
                   <textarea
                     defaultValue={description}
-                    className="w-full text-xl italic bg-transparent border-b border-gray-300 outline-none resize-none"
-                    style={{ color: effectiveStyle.textColor, fontFamily: effectiveStyle.textFontFamily }}
+                    className="w-full italic bg-transparent border-b border-gray-300 outline-none resize-none"
+                    style={{ fontSize: `${Math.round(fs * 1.2)}px`, color: effectiveStyle.textColor, fontFamily: effectiveStyle.textFontFamily }}
                     rows={4}
                     onBlur={(e) => { onDescriptionChange(e.target.value); setEditingField(null); }}
                     autoFocus
@@ -920,8 +929,8 @@ function CanvasBlock({
                 ) : (
                   <p
                     onClick={(e) => { e.stopPropagation(); setEditingField('description'); }}
-                    className="text-xl md:text-2xl italic cursor-text hover:opacity-80 transition leading-relaxed"
-                    style={{ color: effectiveStyle.textColor, fontFamily: effectiveStyle.textFontFamily }}
+                    className="italic cursor-text hover:opacity-80 transition leading-relaxed whitespace-pre-line"
+                    style={{ fontSize: `${Math.round(fs * 1.2)}px`, color: effectiveStyle.textColor, fontFamily: effectiveStyle.textFontFamily }}
                   >
                     {description || '인용문을 입력하세요'}
                   </p>
@@ -960,8 +969,8 @@ function CanvasBlock({
                       type="text"
                       defaultValue={subtitle}
                       placeholder="부제목 (선택사항)"
-                      className="w-full text-sm bg-transparent border-b border-gray-200 outline-none mt-1"
-                      style={{ color: effectiveStyle.textColor, opacity: 0.6 }}
+                      className="w-full bg-transparent border-b border-gray-200 outline-none mt-1"
+                      style={{ fontSize: `${subtitleSize}px`, color: effectiveStyle.textColor, opacity: 0.6 }}
                       onBlur={(e) => { onSubtitleChange(e.target.value); setEditingField(null); }}
                       onKeyDown={(e) => { if (e.key === 'Enter') { onSubtitleChange(e.currentTarget.value); setEditingField(null); }}}
                       autoFocus
@@ -969,8 +978,8 @@ function CanvasBlock({
                   ) : subtitle ? (
                     <p
                       onClick={(e) => { e.stopPropagation(); setEditingField('subtitle'); }}
-                      className="text-sm opacity-60 cursor-text hover:opacity-80 mt-1"
-                      style={{ color: effectiveStyle.textColor }}
+                      className="opacity-60 cursor-text hover:opacity-80 mt-1"
+                      style={{ fontSize: `${subtitleSize}px`, color: effectiveStyle.textColor }}
                     >
                       {subtitle}
                     </p>
@@ -1010,16 +1019,16 @@ function CanvasBlock({
                     <input
                       type="text"
                       defaultValue={title}
-                      className="w-full text-xl font-bold bg-transparent border-b border-gray-300 outline-none"
-                      style={{ color: effectiveStyle.textColor }}
+                      className="w-full font-bold bg-transparent border-b border-gray-300 outline-none"
+                      style={{ fontSize: `${titleSize}px`, color: effectiveStyle.textColor }}
                       onBlur={(e) => { onTitleChange(e.target.value); setEditingField(null); }}
                       autoFocus
                     />
                   ) : (
                     <h3
                       onClick={(e) => { e.stopPropagation(); setEditingField('title'); }}
-                      className="text-xl font-bold cursor-text hover:opacity-80"
-                      style={{ color: effectiveStyle.textColor }}
+                      className="font-bold cursor-text hover:opacity-80"
+                      style={{ fontSize: `${titleSize}px`, color: effectiveStyle.textColor }}
                     >
                       {title || '제목'}
                     </h3>
@@ -1027,8 +1036,8 @@ function CanvasBlock({
                   {(subtitle || description) && (
                     <p
                       onClick={(e) => { e.stopPropagation(); setEditingField('description'); }}
-                      className="text-sm mt-1 cursor-text hover:opacity-80"
-                      style={{ color: effectiveStyle.textColor, opacity: 0.7 }}
+                      className="mt-1 cursor-text hover:opacity-80 whitespace-pre-line"
+                      style={{ fontSize: `${subtitleSize}px`, color: effectiveStyle.textColor, opacity: 0.7 }}
                     >
                       {subtitle || description}
                     </p>
@@ -1088,16 +1097,16 @@ function CanvasBlock({
                   <input
                     type="text"
                     defaultValue={title}
-                    className="w-full text-2xl font-bold bg-transparent border-b outline-none"
-                    style={{ color: effectiveStyle.textColor, borderColor: effectiveStyle.textColor + '50' }}
+                    className="w-full font-bold bg-transparent border-b outline-none"
+                    style={{ fontSize: `${titleSize}px`, color: effectiveStyle.textColor, borderColor: effectiveStyle.textColor + '50' }}
                     onBlur={(e) => { onTitleChange(e.target.value); setEditingField(null); }}
                     autoFocus
                   />
                 ) : (
                   <h3
                     onClick={(e) => { e.stopPropagation(); setEditingField('title'); }}
-                    className="text-2xl font-bold cursor-text hover:opacity-80 transition leading-tight"
-                    style={{ color: effectiveStyle.textColor }}
+                    className="font-bold cursor-text hover:opacity-80 transition leading-tight"
+                    style={{ fontSize: `${titleSize}px`, color: effectiveStyle.textColor }}
                   >
                     {title || '제목'}
                   </h3>
@@ -1105,8 +1114,8 @@ function CanvasBlock({
                 {description && (
                   <p
                     onClick={(e) => { e.stopPropagation(); setEditingField('description'); }}
-                    className="text-sm cursor-text hover:opacity-80 leading-relaxed"
-                    style={{ color: effectiveStyle.textColor, opacity: 0.8 }}
+                    className="cursor-text hover:opacity-80 leading-relaxed whitespace-pre-line"
+                    style={{ fontSize: `${subtitleSize}px`, color: effectiveStyle.textColor, opacity: 0.8 }}
                   >
                     {description}
                   </p>
@@ -1172,8 +1181,8 @@ function CanvasBlock({
                       type="text"
                       defaultValue={title}
                       placeholder="제목"
-                      className="w-full text-2xl font-bold bg-transparent border-b border-white/50 outline-none text-white"
-                      style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
+                      className="w-full font-bold bg-transparent border-b border-white/50 outline-none text-white"
+                      style={{ fontSize: `${titleSize}px`, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
                       onBlur={(e) => { onTitleChange(e.target.value); setEditingField(null); }}
                       onKeyDown={(e) => { if (e.key === 'Enter') { onTitleChange(e.currentTarget.value); setEditingField(null); }}}
                       autoFocus
@@ -1181,8 +1190,8 @@ function CanvasBlock({
                   ) : (
                     <h3
                       onClick={(e) => { e.stopPropagation(); setEditingField('title'); }}
-                      className="text-2xl font-bold text-white cursor-text hover:opacity-80 transition"
-                      style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
+                      className="font-bold text-white cursor-text hover:opacity-80 transition"
+                      style={{ fontSize: `${titleSize}px`, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
                     >
                       {title || '제목을 입력하세요'}
                     </h3>
@@ -1192,7 +1201,8 @@ function CanvasBlock({
                       type="text"
                       defaultValue={subtitle}
                       placeholder="부제목"
-                      className="w-full text-sm bg-transparent border-b border-white/30 outline-none text-white/80"
+                      className="w-full bg-transparent border-b border-white/30 outline-none text-white/80"
+                      style={{ fontSize: `${subtitleSize}px` }}
                       onBlur={(e) => { onSubtitleChange(e.target.value); setEditingField(null); }}
                       onKeyDown={(e) => { if (e.key === 'Enter') { onSubtitleChange(e.currentTarget.value); setEditingField(null); }}}
                       autoFocus
@@ -1200,7 +1210,8 @@ function CanvasBlock({
                   ) : subtitle ? (
                     <p
                       onClick={(e) => { e.stopPropagation(); setEditingField('subtitle'); }}
-                      className="text-sm text-white/80 cursor-text hover:opacity-80"
+                      className="text-white/80 cursor-text hover:opacity-80"
+                      style={{ fontSize: `${subtitleSize}px` }}
                     >
                       {subtitle}
                     </p>
@@ -1221,7 +1232,7 @@ function CanvasBlock({
                     className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3"
                     onClick={(e) => { e.stopPropagation(); setEditingField('description'); }}
                   >
-                    <p className="text-xs text-white/90 line-clamp-2 cursor-text hover:opacity-80">
+                    <p className="text-white/90 line-clamp-2 cursor-text hover:opacity-80 whitespace-pre-line" style={{ fontSize: `${Math.round(fs * 0.7)}px` }}>
                       {description}
                     </p>
                   </div>
@@ -1278,16 +1289,12 @@ function PropertyPanel({
   onCommonSettingsChange,
   onLayoutChange,
   onBlockStyleChange,
-  onSaveCommonSettings,
-  isSaving,
 }: {
   scenario: Scenario | null;
   commonSettings: CommonBlockSettings;
   onCommonSettingsChange: (settings: CommonBlockSettings) => void;
   onLayoutChange: (preset: LayoutPreset) => void;
   onBlockStyleChange: (style: Partial<CommonBlockSettings> | null) => void;
-  onSaveCommonSettings: () => void;
-  isSaving: boolean;
 }) {
   const [activeTab, setActiveTab] = useState<'block' | 'global'>('block');
 
@@ -1318,13 +1325,7 @@ function PropertyPanel({
     { id: 'triple-masonry', label: '매거진3', icon: '📰', category: '멀티' },
   ];
 
-  const FONT_FAMILIES = [
-    { value: 'Pretendard, sans-serif', label: 'Pretendard' },
-    { value: 'Noto Sans KR, sans-serif', label: 'Noto Sans' },
-    { value: 'Nanum Gothic, sans-serif', label: '나눔고딕' },
-    { value: 'Nanum Myeongjo, serif', label: '나눔명조' },
-    { value: 'Georgia, serif', label: 'Georgia' },
-  ];
+  const FONT_FAMILIES = SHARED_FONT_FAMILIES;
 
   return (
     <div className="h-full flex flex-col bg-slate-900">
@@ -1338,7 +1339,7 @@ function PropertyPanel({
               : 'text-slate-400 hover:text-white'
           }`}
         >
-          블록 설정
+          개별블록설정
         </button>
         <button
           onClick={() => setActiveTab('global')}
@@ -1456,6 +1457,38 @@ function PropertyPanel({
                   </select>
                 </div>
 
+                {/* 글꼴 굵기 */}
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">글꼴 굵기</label>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={scenario.block_style?.textFontWeight || ''}
+                      onChange={(e) => onBlockStyleChange({
+                        ...scenario.block_style,
+                        textFontWeight: (e.target.value || undefined) as any
+                      })}
+                      className="flex-1 px-2 py-1.5 bg-slate-800 border border-slate-600 rounded text-sm text-white"
+                    >
+                      <option value="">기본값 사용</option>
+                      {SHARED_FONT_WEIGHTS.map((w) => (
+                        <option key={w.value} value={w.value}>{w.label}</option>
+                      ))}
+                    </select>
+                    {scenario.block_style?.textFontWeight && (
+                      <button
+                        onClick={() => {
+                          const { textFontWeight, ...rest } = scenario.block_style || {};
+                          onBlockStyleChange(Object.keys(rest).length > 0 ? rest : null);
+                        }}
+                        className="text-xs text-slate-500 hover:text-slate-300"
+                        title="기본값으로"
+                      >
+                        ↺
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {/* 글자 크기 */}
                 <div>
                   <label className="block text-xs text-slate-400 mb-1">글자 크기</label>
@@ -1463,7 +1496,7 @@ function PropertyPanel({
                     <input
                       type="range"
                       min="12"
-                      max="24"
+                      max="30"
                       value={scenario.block_style?.textFontSize || commonSettings.textFontSize}
                       onChange={(e) => onBlockStyleChange({
                         ...scenario.block_style,
@@ -1645,6 +1678,25 @@ function PropertyPanel({
               </select>
             </div>
 
+            {/* 글꼴 굵기 */}
+            <div>
+              <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                글꼴 굵기
+              </h4>
+              <select
+                value={commonSettings.textFontWeight}
+                onChange={(e) => onCommonSettingsChange({
+                  ...commonSettings,
+                  textFontWeight: e.target.value as CommonBlockSettings['textFontWeight'],
+                })}
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-sm text-white"
+              >
+                {SHARED_FONT_WEIGHTS.map((w) => (
+                  <option key={w.value} value={w.value}>{w.label}</option>
+                ))}
+              </select>
+            </div>
+
             {/* 글꼴 크기 */}
             <div>
               <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
@@ -1654,7 +1706,7 @@ function PropertyPanel({
                 <input
                   type="range"
                   min="12"
-                  max="24"
+                  max="30"
                   value={commonSettings.textFontSize}
                   onChange={(e) => onCommonSettingsChange({
                     ...commonSettings,
@@ -1720,14 +1772,10 @@ function PropertyPanel({
               </div>
             </div>
 
-            {/* 저장 버튼 */}
-            <button
-              onClick={onSaveCommonSettings}
-              disabled={isSaving}
-              className="w-full py-3 bg-violet-600 hover:bg-violet-500 disabled:bg-slate-600 text-white font-medium rounded-lg transition"
-            >
-              {isSaving ? '저장 중...' : '전체 스타일 저장'}
-            </button>
+            {/* 자동 저장 안내 */}
+            <p className="text-center text-xs text-slate-500 py-2">
+              변경사항이 자동 저장됩니다
+            </p>
           </>
         )}
       </div>
@@ -1754,7 +1802,7 @@ export default function EditorPage() {
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [commonSettings, setCommonSettings] = useState<CommonBlockSettings>(DEFAULT_COMMON_SETTINGS);
-  const [isSaving, setIsSaving] = useState(false);
+
   const [zoom, setZoom] = useState(100);
   const [isRandomizing, setIsRandomizing] = useState(false);
 
@@ -1781,6 +1829,28 @@ export default function EditorPage() {
       setCommonSettings(project.common_block_settings);
     }
   }, [project]);
+
+  // 공통 설정 자동 저장 (1초 디바운스)
+  const isInitialLoad = useRef(true);
+  useEffect(() => {
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      return;
+    }
+    if (!projectId) return;
+    const timer = setTimeout(async () => {
+      try {
+        await fetch(`/api/projects/${projectId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ common_block_settings: commonSettings }),
+        });
+      } catch (error) {
+        console.error('Error auto-saving common settings:', error);
+      }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [commonSettings, projectId]);
 
   // 랜덤 레이아웃 배치 함수
   const applyRandomLayouts = async (scenarioList: Scenario[], saveToServer = true) => {
@@ -1937,6 +2007,11 @@ export default function EditorPage() {
 
   // 추가 이미지 업로드
   const handleAdditionalImageAdd = async (scenarioId: string, slotIndex: number, file: File) => {
+    if (file.size > 4 * 1024 * 1024) {
+      alert('이미지 용량이 4MB를 초과합니다. 이미지 크기를 줄여주세요.');
+      return;
+    }
+
     try {
       // FormData로 업로드
       const formData = new FormData();
@@ -2075,22 +2150,99 @@ export default function EditorPage() {
     }
   };
 
-  // 공통 설정 저장
-  const handleSaveCommonSettings = async () => {
-    setIsSaving(true);
-    try {
-      await fetch(`/api/projects/${projectId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ common_block_settings: commonSettings }),
-      });
-      alert('전체 스타일이 저장되었습니다.');
-    } catch (error) {
-      console.error('Error saving common settings:', error);
-      alert('저장에 실패했습니다.');
-    } finally {
-      setIsSaving(false);
+
+  // 폰트 CSS 빌드 (사용 중인 폰트만 data URI로 임베딩)
+  const buildFontEmbedCSS = async (): Promise<string> => {
+    // 사용 중인 폰트 패밀리 수집
+    const usedFamilies = new Set<string>();
+    scenarios.forEach(s => {
+      const style = { ...commonSettings, ...(s.block_style || {}) };
+      usedFamilies.add(style.textFontFamily || commonSettings.textFontFamily);
+    });
+
+    let css = '';
+
+    // Google Fonts CSS 가져오기 (fetch API는 CORS 지원)
+    const gfLink = document.querySelector<HTMLLinkElement>('link[href*="fonts.googleapis.com/css2"]');
+    if (gfLink?.href) {
+      try {
+        const res = await fetch(gfLink.href);
+        const gfText = await res.text();
+        const blocks = gfText.match(/@font-face\s*\{[^}]+\}/g) || [];
+        for (const block of blocks) {
+          const fm = block.match(/font-family:\s*['"]([^'"]+)['"]/);
+          if (fm && Array.from(usedFamilies).some(f => f.includes(fm[1]))) {
+            css += block + '\n';
+          }
+        }
+      } catch (e) {
+        console.warn('Google Fonts CSS fetch failed:', e);
+      }
     }
+
+    // MaruBuri
+    if (Array.from(usedFamilies).some(f => f.includes('MaruBuri'))) {
+      css += `@font-face { font-family: 'MaruBuri'; src: url('https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-Regular.woff2') format('woff2'); font-weight: 400; font-style: normal; }\n`;
+      css += `@font-face { font-family: 'MaruBuri'; src: url('https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-Bold.woff2') format('woff2'); font-weight: 700; font-style: normal; }\n`;
+    }
+
+    // Pretendard (사용 중인 weight만)
+    if (Array.from(usedFamilies).some(f => f.includes('Pretendard'))) {
+      try {
+        const ptRes = await fetch('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+        const ptText = await ptRes.text();
+        // relative URL을 absolute로 변환
+        const ptBase = 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/';
+        const ptFixed = ptText.replace(/url\(\.?\/?/g, `url(${ptBase}`);
+        const ptBlocks = ptFixed.match(/@font-face\s*\{[^}]+\}/g) || [];
+        const neededWeights = new Set<string>();
+        scenarios.forEach(s => {
+          const style = { ...commonSettings, ...(s.block_style || {}) };
+          if ((style.textFontFamily || '').includes('Pretendard')) {
+            neededWeights.add(style.textFontWeight || commonSettings.textFontWeight || '400');
+          }
+        });
+        for (const block of ptBlocks) {
+          const wm = block.match(/font-weight:\s*(\d+)/);
+          if (wm && neededWeights.has(wm[1])) {
+            css += block + '\n';
+          }
+        }
+      } catch (e) {
+        console.warn('Pretendard CSS fetch failed:', e);
+      }
+    }
+
+    if (!css) return '';
+
+    // 모든 font URL을 data URI로 변환
+    const urlRegex = /url\(['"]?([^'")\s]+)['"]?\)/g;
+    const fontUrls = new Map<string, string>();
+    let m;
+    while ((m = urlRegex.exec(css)) !== null) {
+      if (m[1].startsWith('http')) fontUrls.set(m[1], '');
+    }
+
+    await Promise.allSettled(
+      Array.from(fontUrls.keys()).map(async (url) => {
+        try {
+          const r = await fetch(url, { mode: 'cors' });
+          const blob = await r.blob();
+          const dataUri: string = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+          fontUrls.set(url, dataUri);
+        } catch { /* skip failed fonts */ }
+      })
+    );
+
+    return css.replace(/url\(['"]?([^'")\s]+)['"]?\)/g, (full, url) => {
+      const dataUri = fontUrls.get(url);
+      return dataUri ? `url('${dataUri}')` : full;
+    });
   };
 
   // 다운로드
@@ -2100,20 +2252,25 @@ export default function EditorPage() {
       const blocks = document.querySelectorAll('.canvas-block');
       if (blocks.length === 0) return;
 
+      // 폰트 임베딩 CSS 빌드 (cssRules CORS 에러 방지)
+      let fontEmbedCSS = '';
+      try {
+        fontEmbedCSS = await buildFontEmbedCSS();
+      } catch (e) {
+        console.warn('Font embedding failed, downloading without fonts:', e);
+      }
+
       const options = {
         backgroundColor: '#ffffff',
         pixelRatio: 2,
         cacheBust: true,
         useCORS: true,
         skipAutoScale: true,
-        skipFonts: true, // 외부 웹폰트 CORS 에러 방지
-        // 이미지 URL에 타임스탬프 추가하여 캐시 무효화
+        fontEmbedCSS,
         imagePlaceholder: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-        // no-download 클래스를 가진 요소는 제외
         filter: (node: HTMLElement) => {
           return !node.classList?.contains('no-download');
         },
-        // 이미지 요청 시 추가 설정
         fetchRequestInit: {
           mode: 'cors' as RequestMode,
           credentials: 'omit' as RequestCredentials,
@@ -2311,8 +2468,6 @@ export default function EditorPage() {
             onCommonSettingsChange={setCommonSettings}
             onLayoutChange={handleLayoutChange}
             onBlockStyleChange={handleBlockStyleChange}
-            onSaveCommonSettings={handleSaveCommonSettings}
-            isSaving={isSaving}
           />
         </aside>
       </div>

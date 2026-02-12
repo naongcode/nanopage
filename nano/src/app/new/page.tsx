@@ -48,6 +48,12 @@ export default function Home() {
       return;
     }
 
+    const totalSize = [...productImages, ...files].reduce((sum, f) => sum + f.size, 0);
+    if (totalSize > 4 * 1024 * 1024) {
+      alert('이미지 총 용량이 4MB를 초과합니다. 이미지 크기를 줄여주세요.');
+      return;
+    }
+
     setProductImages((prev) => [...prev, ...files]);
 
     files.forEach((file) => {
