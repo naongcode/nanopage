@@ -211,12 +211,16 @@ ${imageCountText} 다음 정보를 JSON 형식으로 추출해주세요:
 
                 imageAnalysis = JSON.parse(jsonMatch[0]);
                 break;
-              } catch (e) {
-                if (attempt < MAX_RETRIES) {
+              } catch (e: any) {
+                const errMsg = e?.message || String(e);
+                const isRateLimit = errMsg.includes('429') || errMsg.includes('RATE') || errMsg.includes('quota') || errMsg.includes('Resource has been exhausted');
+                console.error(`이미지 분석 실패 (${attempt}/${MAX_RETRIES}):`, errMsg);
+
+                if (isRateLimit && attempt < MAX_RETRIES) {
                   sendEvent({ type: 'progress', step: `[${currentStep}/${totalSteps}] API 한도 초과 - ${RETRY_DELAY / 1000}초 후 재시도... (${attempt}/${MAX_RETRIES})` });
                   await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
                 } else {
-                  throw new Error('이미지 분석에 실패했습니다. 잠시 후 다시 시도해주세요. (API 호출 한도 초과)');
+                  throw new Error(`이미지 분석 실패: ${errMsg}`);
                 }
               }
             }
