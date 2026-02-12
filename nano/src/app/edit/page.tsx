@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Project } from '@/types';
 import { FIELD_OPTIONS } from '@/lib/field-options';
+import { uploadImages } from '@/lib/upload';
 import FieldOptions from '@/components/FieldOptions';
 
 type ConceptCategory = 'food' | 'beauty' | 'lifestyle' | 'tech' | 'fashion' | 'health' | 'baby' | 'pet' | 'home' | 'travel';
@@ -112,12 +113,6 @@ function EditContent() {
       return;
     }
 
-    const totalSize = [...productImages, ...files].reduce((sum, f) => sum + f.size, 0);
-    if (totalSize > 4 * 1024 * 1024) {
-      alert('이미지 총 용량이 4MB를 초과합니다. 이미지 크기를 줄여주세요.');
-      return;
-    }
-
     setProductImages((prev) => [...prev, ...files]);
 
     files.forEach((file) => {
@@ -154,22 +149,7 @@ function EditContent() {
     try {
       let newImageUrls: string[] = [];
       if (productImages.length > 0) {
-        const uploadFormData = new FormData();
-        productImages.forEach((file) => {
-          uploadFormData.append('images', file);
-        });
-
-        const uploadResponse = await fetch('/api/upload', {
-          method: 'POST',
-          body: uploadFormData,
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error('이미지 업로드에 실패했습니다.');
-        }
-
-        const uploadData = await uploadResponse.json();
-        newImageUrls = uploadData.urls;
+        newImageUrls = await uploadImages(productImages);
       }
 
       const allImageUrls = [...existingImageUrls, ...newImageUrls];

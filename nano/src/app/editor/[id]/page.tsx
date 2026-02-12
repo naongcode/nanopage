@@ -21,6 +21,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { uploadImages } from '@/lib/upload';
 
 // 블록 리스트 아이템
 function BlockListItem({
@@ -2007,27 +2008,8 @@ export default function EditorPage() {
 
   // 추가 이미지 업로드
   const handleAdditionalImageAdd = async (scenarioId: string, slotIndex: number, file: File) => {
-    if (file.size > 4 * 1024 * 1024) {
-      alert('이미지 용량이 4MB를 초과합니다. 이미지 크기를 줄여주세요.');
-      return;
-    }
-
     try {
-      // FormData로 업로드
-      const formData = new FormData();
-      formData.append('images', file);
-
-      const uploadRes = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!uploadRes.ok) {
-        const errorData = await uploadRes.json();
-        throw new Error(errorData.error || '이미지 업로드 실패');
-      }
-
-      const { urls } = await uploadRes.json();
+      const urls = await uploadImages([file]);
       const url = urls[0];
 
       // 현재 시나리오 가져오기
