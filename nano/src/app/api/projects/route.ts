@@ -378,6 +378,32 @@ ${imageAnalysisText}
           throw new Error(`프로젝트 저장 실패: ${projectError?.message}`);
         }
 
+        // 업로드된 이미지를 프로젝트 폴더로 이동
+        if (body.product_images && body.product_images.length > 0) {
+          const movedUrls: string[] = [];
+          for (const imageUrl of body.product_images) {
+            // URL에서 Storage 경로 추출 (product-images/ 이후 부분)
+            const match = imageUrl.match(/product-images\/(.+)$/);
+            if (!match) continue;
+            const oldPath = decodeURIComponent(match[1]);
+            const fileName = oldPath.split('/').pop();
+            const newPath = `${project.id}/uploads/${fileName}`;
+
+            await supabase.storage.from('product-images').move(oldPath, newPath);
+
+            const { data: publicUrlData } = supabase.storage
+              .from('product-images')
+              .getPublicUrl(newPath);
+            movedUrls.push(publicUrlData.publicUrl);
+          }
+
+          // 이동된 URL로 프로젝트 업데이트
+          await supabase
+            .from('projects')
+            .update({ product_images: movedUrls })
+            .eq('id', project.id);
+        }
+
         // scenario_no 중복 방지: 순서대로 1부터 재할당
         const scenariosToInsert = allScenarios.map((scenario, index) => ({
           project_id: project.id,
