@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '최대 5장까지 업로드할 수 있습니다.' }, { status: 400 });
     }
 
+    const folder = formData.get('projectId') as string || crypto.randomUUID();
     const uploadedUrls: string[] = [];
 
     for (const image of images) {
@@ -24,12 +25,12 @@ export async function POST(request: NextRequest) {
       const timestamp = Date.now();
       const randomString = Math.random().toString(36).substring(7);
       const fileExtension = image.name.split('.').pop();
-      const fileName = `${timestamp}-${randomString}.${fileExtension}`;
+      const filePath = `${folder}/uploads/${timestamp}-${randomString}.${fileExtension}`;
 
       // Supabase Storage에 업로드
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('product-images')
-        .upload(fileName, buffer, {
+        .upload(filePath, buffer, {
           contentType: image.type,
           upsert: false,
         });
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
       // 공개 URL 생성
       const { data: publicUrlData } = supabase.storage
         .from('product-images')
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
 
       uploadedUrls.push(publicUrlData.publicUrl);
     }

@@ -149,7 +149,7 @@ function EditContent() {
     try {
       let newImageUrls: string[] = [];
       if (productImages.length > 0) {
-        newImageUrls = await uploadImages(productImages);
+        newImageUrls = await uploadImages(productImages, projectId!);
       }
 
       const allImageUrls = [...existingImageUrls, ...newImageUrls];

@@ -155,7 +155,7 @@ Important:
     }
 
     // Supabase Storage에 이미지 업로드
-    const fileName = `generated/${projectId}/${scenarioId}_${Date.now()}.png`;
+    const fileName = `${projectId}/generated/${scenarioId}_${Date.now()}.png`;
     const imageBuffer = Buffer.from(generatedImageBase64, 'base64');
 
     console.log('💾 [Storage 업로드 시작]');

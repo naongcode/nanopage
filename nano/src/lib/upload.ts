@@ -1,17 +1,18 @@
 import { supabase } from './supabase';
 
-export async function uploadImages(files: File[]): Promise<string[]> {
+export async function uploadImages(files: File[], projectId?: string): Promise<string[]> {
+  const folder = projectId || crypto.randomUUID();
   const urls: string[] = [];
 
   for (const file of files) {
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(7);
     const fileExtension = file.name.split('.').pop();
-    const fileName = `${timestamp}-${randomString}.${fileExtension}`;
+    const filePath = `${folder}/uploads/${timestamp}-${randomString}.${fileExtension}`;
 
     const { error } = await supabase.storage
       .from('product-images')
-      .upload(fileName, file, {
+      .upload(filePath, file, {
         contentType: file.type,
         upsert: false,
       });
@@ -22,7 +23,7 @@ export async function uploadImages(files: File[]): Promise<string[]> {
 
     const { data: publicUrlData } = supabase.storage
       .from('product-images')
-      .getPublicUrl(fileName);
+      .getPublicUrl(filePath);
 
     urls.push(publicUrlData.publicUrl);
   }

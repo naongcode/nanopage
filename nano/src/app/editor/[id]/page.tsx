@@ -2009,7 +2009,7 @@ export default function EditorPage() {
   // 추가 이미지 업로드
   const handleAdditionalImageAdd = async (scenarioId: string, slotIndex: number, file: File) => {
     try {
-      const urls = await uploadImages([file]);
+      const urls = await uploadImages([file], projectId);
       const url = urls[0];
 
       // 현재 시나리오 가져오기
