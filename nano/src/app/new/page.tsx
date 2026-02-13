@@ -77,22 +77,33 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setLoadingStep('');
+    setLoadingStep('프로젝트 생성 중...');
     setWarnings([]);
 
     try {
-      let imageUrls: string[] = [];
-      if (productImages.length > 0) {
-        imageUrls = await uploadImages(productImages);
-      }
-
-      const response = await fetch('/api/projects', {
+      // 1. 프로젝트 먼저 생성 (기본 정보만)
+      const createResponse = await fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          product_images: imageUrls,
-        }),
+        body: JSON.stringify(formData),
+      });
+
+      if (!createResponse.ok) {
+        const err = await createResponse.json();
+        throw new Error(err.error || '프로젝트 생성 실패');
+      }
+
+      const { id: projectId } = await createResponse.json();
+
+      // 2. 이미지 업로드 (프로젝트 ID로 바로 올바른 경로에 저장)
+      if (productImages.length > 0) {
+        setLoadingStep('이미지 업로드 중...');
+        await uploadImages(productImages, projectId);
+      }
+
+      // 3. AI 시나리오 생성 (스트리밍)
+      const response = await fetch(`/api/projects/${projectId}/generate`, {
+        method: 'POST',
       });
 
       if (!response.body) {
