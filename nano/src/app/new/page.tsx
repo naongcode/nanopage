@@ -95,10 +95,16 @@ export default function Home() {
 
       const { id: projectId } = await createResponse.json();
 
-      // 2. 이미지 업로드 (프로젝트 ID로 바로 올바른 경로에 저장)
+      // 2. 이미지 업로드 (프로젝트 ID로 바로 올바른 경로에 저장 + DB 반영)
       if (productImages.length > 0) {
         setLoadingStep('이미지 업로드 중...');
-        await uploadImages(productImages, projectId);
+        const imageUrls = await uploadImages(productImages, projectId);
+
+        await fetch(`/api/projects/${projectId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ product_images: imageUrls }),
+        });
       }
 
       // 3. AI 시나리오 생성 (스트리밍)
