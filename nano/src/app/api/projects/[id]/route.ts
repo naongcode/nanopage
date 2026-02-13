@@ -111,13 +111,24 @@ export async function DELETE(
 
     // 1. Storage에서 프로젝트 폴더 전체 삭제 ({projectId}/uploads/, {projectId}/generated/)
     for (const subFolder of ['uploads', 'generated']) {
-      const { data: files } = await supabase.storage
+      const { data: files, error: listError } = await supabase.storage
         .from('product-images')
         .list(`${id}/${subFolder}`);
 
+      if (listError) {
+        console.error(`Storage list error (${subFolder}):`, listError);
+        continue;
+      }
+
       if (files && files.length > 0) {
         const filePaths = files.map((f) => `${id}/${subFolder}/${f.name}`);
-        await supabase.storage.from('product-images').remove(filePaths);
+        const { error: removeError } = await supabase.storage
+          .from('product-images')
+          .remove(filePaths);
+
+        if (removeError) {
+          console.error(`Storage remove error (${subFolder}):`, removeError);
+        }
       }
     }
 
