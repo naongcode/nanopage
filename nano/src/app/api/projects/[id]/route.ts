@@ -115,19 +115,19 @@ export async function DELETE(
         .from('product-images')
         .list(`${id}/${subFolder}`);
 
-      if (listError) {
-        console.error(`Storage list error (${subFolder}):`, listError);
-        continue;
-      }
+      console.log(`Storage list ${id}/${subFolder}:`, { files, listError });
 
       if (files && files.length > 0) {
-        const filePaths = files.map((f) => `${id}/${subFolder}/${f.name}`);
-        const { error: removeError } = await supabase.storage
-          .from('product-images')
-          .remove(filePaths);
+        const filePaths = files
+          .filter((f) => f.name !== '.emptyFolderPlaceholder')
+          .map((f) => `${id}/${subFolder}/${f.name}`);
 
-        if (removeError) {
-          console.error(`Storage remove error (${subFolder}):`, removeError);
+        if (filePaths.length > 0) {
+          const { data: removeData, error: removeError } = await supabase.storage
+            .from('product-images')
+            .remove(filePaths);
+
+          console.log(`Storage remove ${id}/${subFolder}:`, { removeData, removeError });
         }
       }
     }
