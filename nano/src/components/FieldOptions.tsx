@@ -33,21 +33,18 @@ export default function FieldOptions({ options, onSelect, currentValue }: FieldO
     onSelect(values.join(', '));
   };
 
-  // 그룹 옵션용 클릭 (그룹 내 단일 선택)
-  const handleGroupedOptionClick = (value: string, groupName: string) => {
-    const groupedOptions = options as Record<string, Array<{ label: string; value: string }>>;
-    const groupValues = groupedOptions[groupName].map(o => o.value);
+  // 그룹 옵션용 클릭 (멀티 선택)
+  const handleGroupedOptionClick = (value: string) => {
     const values = parseValues(currentValue);
+    const index = values.indexOf(value);
 
-    // 해당 그룹의 기존 선택값 제거
-    const filtered = values.filter(v => !groupValues.includes(v));
-
-    // 이미 선택된 값이면 제거만 (토글 해제), 아니면 새 값 추가
-    if (!values.includes(value)) {
-      filtered.push(value);
+    if (index !== -1) {
+      values.splice(index, 1);
+    } else {
+      values.push(value);
     }
 
-    onSelect(filtered.join(', '));
+    onSelect(values.join(', '));
   };
 
   if (isGrouped) {
@@ -74,7 +71,7 @@ export default function FieldOptions({ options, onSelect, currentValue }: FieldO
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => handleGroupedOptionClick(option.value, groupName)}
+                  onClick={() => handleGroupedOptionClick(option.value)}
                   className={`px-3 py-1.5 text-sm rounded-full border-2 transition-all ${
                     isSelected(option.value)
                       ? 'bg-yellow-400 border-yellow-500 text-gray-900 font-semibold'

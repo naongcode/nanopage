@@ -68,9 +68,14 @@ export default function Home() {
   const appendToField = (field: string, value: string) => {
     setFormData((prev) => {
       const current = prev[field as keyof typeof prev];
-      if (current.includes(value)) return prev;
-      const newValue = current ? `${current}, ${value}` : value;
-      return { ...prev, [field]: newValue };
+      const values = current.split(',').map(v => v.trim()).filter(v => v.length > 0);
+      const index = values.indexOf(value);
+      if (index !== -1) {
+        values.splice(index, 1);
+      } else {
+        values.push(value);
+      }
+      return { ...prev, [field]: values.join(', ') };
     });
   };
 
@@ -179,12 +184,6 @@ export default function Home() {
               className="inline-block bg-white hover:bg-gray-50 text-gray-700 font-semibold py-2 px-5 rounded-lg shadow transition-colors"
             >
               📁 프로젝트 목록
-            </a>
-            <a
-              href="/setup"
-              className="inline-block bg-white hover:bg-gray-50 text-gray-700 font-semibold py-2 px-5 rounded-lg shadow transition-colors"
-            >
-              ⚙️ 설정
             </a>
           </div>
         </header>
