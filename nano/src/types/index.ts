@@ -11,21 +11,12 @@ export interface CommonBlockSettings {
 }
 
 // 개별 블록 스타일 (공통 설정의 일부만 override 가능)
-export interface BlockStyle extends Partial<CommonBlockSettings> {}
-
-// 이미지 자르기 정보
-export interface ImageCrop {
-  x: number;      // 퍼센트
-  y: number;      // 퍼센트
-  width: number;  // 퍼센트
-  height: number; // 퍼센트
-  zoom: number;   // 배율
-  // 픽셀 기반 (정확한 표시용)
-  pixelX?: number;
-  pixelY?: number;
-  pixelWidth?: number;
-  pixelHeight?: number;
+export interface BlockStyle extends Partial<CommonBlockSettings> {
+  imageScale?: number;    // 이미지 배율 (1.0 ~ 4.0)
+  imageOffsetX?: number;  // 이미지 X 오프셋 (px)
+  imageOffsetY?: number;  // 이미지 Y 오프셋 (px)
 }
+
 
 // 프로젝트 타입 정의
 export interface Project {
@@ -94,7 +85,6 @@ export interface Scenario {
   text_width?: number | null;  // 텍스트 너비
   text_height?: number | null;  // 텍스트 높이
   block_style?: BlockStyle | null;  // 개별 블록 스타일 override
-  image_crop?: ImageCrop | null;  // 이미지 자르기 정보
   deleted_at?: string | null;
   created_at?: string;
   updated_at?: string;
@@ -144,6 +134,5 @@ export interface UpdateScenarioRequest {
   text_width?: number | null;
   text_height?: number | null;
   block_style?: BlockStyle | null;  // 개별 블록 스타일
-  image_crop?: ImageCrop | null;  // 이미지 자르기
   additional_image_urls?: string[];  // 추가 이미지 URL들
 }

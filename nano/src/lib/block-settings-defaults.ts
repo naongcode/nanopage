@@ -6,13 +6,16 @@ export const DEFAULT_COMMON_SETTINGS: CommonBlockSettings = {
   textFontFamily: '"Gowun Dodum", sans-serif',
   textFontSize: 20,
   textColor: '#1a1a1a',
-  textFontWeight: '600',
-  textAlign: 'left',
+  textFontWeight: '700',
+  textAlign: 'center',
 };
 
 export const FONT_FAMILIES = [
+  // 시스템 폰트
+  { label: '돋움 (시스템)', value: 'Dotum, sans-serif' },
+  { label: '굴림 (시스템)', value: 'Gulim, sans-serif' },
   // 깔끔한 고딕 계열
-  { label: 'Pretendard (기본)', value: 'Pretendard, -apple-system, sans-serif' },
+  { label: 'Pretendard', value: 'Pretendard, -apple-system, sans-serif' },
   { label: 'Noto Sans KR', value: '"Noto Sans KR", sans-serif' },
   { label: '나눔고딕', value: '"Nanum Gothic", sans-serif' },
   { label: 'Spoqa Han Sans', value: '"Spoqa Han Sans Neo", sans-serif' },

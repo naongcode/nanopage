@@ -28,7 +28,6 @@ export async function PATCH(
     if (body.text_width !== undefined) updateData.text_width = body.text_width;
     if (body.text_height !== undefined) updateData.text_height = body.text_height;
     if (body.block_style !== undefined) updateData.block_style = body.block_style;
-    if (body.image_crop !== undefined) updateData.image_crop = body.image_crop;
     if (body.additional_image_urls !== undefined) {
       updateData.additional_image_urls = body.additional_image_urls;
     }

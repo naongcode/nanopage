@@ -2,8 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Scenario } from '@/types';
-import { supabase } from '@/lib/supabase';
+import { Scenario, Project } from '@/types';
 
 function ResultContent() {
   const searchParams = useSearchParams();
@@ -20,7 +19,7 @@ function ResultContent() {
   const [showDeleted, setShowDeleted] = useState<boolean>(false);
   const [generatingImageId, setGeneratingImageId] = useState<string | null>(null);
   const [regeneratingScenarioId, setRegeneratingScenarioId] = useState<string | null>(null);
-  const [project, setProject] = useState<any>(null);
+  const [project, setProject] = useState<Project | null>(null);
   const [batchGenerating, setBatchGenerating] = useState(false);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0, success: 0, fail: 0 });
 
@@ -345,7 +344,7 @@ function ResultContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-yellow-100 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-amber-50 to-yellow-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-yellow-500 mx-auto mb-4"></div>
           <p className="text-lg text-gray-700">시나리오를 불러오는 중...</p>
@@ -356,7 +355,7 @@ function ResultContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-yellow-100 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-amber-50 to-yellow-100 flex items-center justify-center">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center">
           <p className="text-red-600 text-lg mb-4">{error}</p>
           <button
@@ -371,7 +370,7 @@ function ResultContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-yellow-100 py-12 px-4">
+    <div className="min-h-screen bg-linear-to-br from-amber-50 to-yellow-100 py-12 px-4">
       <div className="max-w-7xl mx-auto">
         {/* 헤더 with 홈 버튼 */}
         <header className="mb-8">
@@ -527,7 +526,7 @@ function ResultContent() {
 
                                 return (
                                   <div key={i} className="flex">
-                                    <span className="font-semibold text-gray-800 min-w-[60px]">{label}:</span>
+                                    <span className="font-semibold text-gray-800 min-w-15">{label}:</span>
                                     <span className="ml-1 text-gray-700">{value}</span>
                                   </div>
                                 );
@@ -667,7 +666,7 @@ export default function ResultPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-br from-amber-50 to-yellow-100 flex items-center justify-center">
+        <div className="min-h-screen bg-linear-to-br from-amber-50 to-yellow-100 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-yellow-500 mx-auto mb-4"></div>
             <p className="text-lg text-gray-700">로딩 중...</p>
